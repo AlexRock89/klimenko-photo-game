@@ -1,6 +1,6 @@
 'use strict';
 /* ===== Управление касанием для телефонов ===== */
-const TZ = { split: VW * 0.42, jr: 40, jx: 76, jy: 284, aimLift: 44 };
+const TZ = { split: VW * 0.42, jr: 40, jx: 54, jy: 298, aimLift: 44 };
 
 /* На телефоне вместо клавиш и мыши другие слова */
 function touchText(s) {
@@ -27,7 +27,7 @@ function touchDown(id, p) {
   if (inHelpBtn(p)) { S.help = true; S.helpPage = 0; return; }
   if (S.mode !== 'play') { begin(); return; }
   if (p.x < TZ.split) {
-    if (S.joy.id < 0) { Object.assign(S.joy, { id, on: true, ox: p.x, oy: p.y, x: 0, y: 0, kx: 0, ky: 0 }); }
+    if (S.joy.id < 0) { Object.assign(S.joy, { id, on: true, ox: TZ.jx, oy: TZ.jy, x: 0, y: 0, kx: 0, ky: 0 }); touchMove(id, p); }
   } else if (S.aimId < 0) {
     S.aimId = id; S.rmb = true; S.mx = p.x; S.my = p.y - TZ.aimLift;
   }
@@ -97,10 +97,8 @@ function drawStick(bx, by, knobX, knobY, active, alpha) {
 }
 function drawZones() {
   const c = ctx, j = S.joy;
-  drawStick(j.on ? j.ox : TZ.jx, j.on ? j.oy : TZ.jy, j.kx || 0, j.ky || 0, j.on, 1);
+  drawStick(TZ.jx, TZ.jy, j.kx || 0, j.ky || 0, j.on, 1);
   const zx = TZ.split + 10, zw = VW - zx - 10, zc = zx + zw / 2;
-  c.globalAlpha = 0.45; corners(zx, 44, zw - 2, VH - 54, '#ffe14d'); c.globalAlpha = 1;
-  T('КАМЕРА', zc, 50, 'rgba(255,225,77,0.7)', 8, 'center');
   if (!S.st || S.st.shots < 1) {
     const y = VH - 66;
     c.globalAlpha = 0.7; R(c, zc - 104, y, 208, 42, '#1b0f33'); c.globalAlpha = 1;
