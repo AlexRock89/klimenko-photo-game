@@ -45,7 +45,7 @@
   #rotate span { font-size: 14px; color: var(--muted); }
   @keyframes rot { 0%, 25% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
   @media (pointer: coarse) {
-    body { padding-block: 0; padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
+    body { padding-top: 0; padding-bottom: 0; padding-left: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); padding-right: max(env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px)); }
     #hint { display: none; }
     canvas { border: 0; border-radius: 0; box-shadow: none; }
   }
@@ -58,12 +58,12 @@
   <canvas id="game" width="640" height="360" aria-label="Игра: фотограф Оксана снимает клиентов в парке"></canvas>
   <p id="hint"><b>WASD</b> или стрелки — бег · мышь — прицел · <b>ЛКМ</b> — снимок · <b>ПКМ</b> — фокус · <b>M</b> — звук · <b>N</b> — музыка · <b>Пробел</b> — пауза и правила. Играть с компьютера.</p>
 </main>
-<script src="art-people.js?v=202610221651"></script>
-<script src="art-world.js?v=202610221651"></script>
-<script src="actors.js?v=202610221651"></script>
-<script src="sound.js?v=202610221651"></script>
-<script src="systems.js?v=202610221651"></script>
-<script src="touch.js?v=202610221651"></script>
-<script src="game.js?v=202610221651"></script>
+<script src="art-people.js?v=202610221657"></script>
+<script src="art-world.js?v=202610221657"></script>
+<script src="actors.js?v=202610221657"></script>
+<script src="sound.js?v=202610221657"></script>
+<script src="systems.js?v=202610221657"></script>
+<script src="touch.js?v=202610221657"></script>
+<script src="game.js?v=202610221657"></script>
 </body>
 </html>
