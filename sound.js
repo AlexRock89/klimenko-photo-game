@@ -59,7 +59,7 @@ const REACT = {
   jogger: [['cheer', 0.45, 1]], busker: [['guitar', 0.5, 1]]
 };
 const SFXN = {
-  bark: [['bark', 0.5, 1]], meow: [['meow', 0.5, 1]], monkey: [['monkey', 0.5, 1]], coo2: [['coo', 0.55, 1]],
+  bark: [['bark', 0.5, 1]], meow: [['meow', 0.5, 1]], monkey: [['monkey', 0.5, 1]], coo2: [['coo', 0.5, 1]],
   roar: [['roar', 0.75, 1]], quack: [['quack', 0.6, 1]], click: [['click', 0.5, 1]]
 };
 function reactClient(id, x, y, delay) {
