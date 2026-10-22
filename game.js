@@ -15,13 +15,31 @@ canvas.width = VW; canvas.height = VH;
 S.ground = makeGround();
 
 /* ===== Мир ===== */
-const TREES = [[100, 200, 0], [330, 252, 1], [560, 236, 2], [760, 244, 3], [1010, 232, 0], [1190, 200, 1], [110, 430, 2], [300, 452, 3], [520, 522, 0], [800, 548, 1], [980, 472, 2], [1190, 500, 3], [180, 590, 0], [420, 596, 2], [900, 592, 3], [1190, 330, 2]];
-const BALLOONS = [[150, 300], [430, 210], [700, 500], [1000, 352], [250, 380], [600, 470], [880, 600], [380, 640], [1150, 160]];
-const LAMPS = [[600, 300], [680, 424], [300, 350], [980, 380], [640, 600]];
+const TREES = [[168, 144, 0], [336, 142, 1], [512, 298, 2], [760, 176, 3], [1010, 232, 0], [1124, 230, 1], [98, 498, 2], [364, 476, 3], [520, 522, 0], [800, 452, 1], [884, 448, 2], [1168, 566, 3], [192, 590, 0], [420, 596, 2], [968, 564, 3], [1190, 330, 2]];
+const BALLOONS = [[150, 300], [420, 288], [718, 564], [868, 328], [258, 394], [514, 442], [864, 600], [252, 584], [1080, 152]];
+const LAMPS = [[600, 252], [709, 457], [289, 324], [936, 406], [592, 608]];
 const SOLIDS = [
-  { c: 1, x: 640, y: 360, r: 36 }, { r: 1, x: 862, y: 84, w: 116, h: 48 }, { c: 1, x: 140, y: 556, r: 24 }, { r: 1, x: 1102, y: 284, w: 36, h: 14 }
+  { c: 1, x: 640, y: 358, r: 40 }, { r: 1, x: 862, y: 84, w: 116, h: 48 }, { c: 1, x: 140, y: 556, r: 28 }, { r: 1, x: 1102, y: 284, w: 36, h: 14 }
 ];
 TREES.forEach(t => SOLIDS.push({ c: 1, x: t[0], y: t[1], r: 5 }));
+LAMPS.forEach(l => SOLIDS.push({ c: 1, x: l[0], y: l[1], r: 3 }));
+BALLOONS.forEach(b => SOLIDS.push({ c: 1, x: b[0], y: b[1], r: 3 }));
+SOLIDS.push({ r: 1, x: 294, y: 534, w: 72, h: 44 });                      // сцена
+SOLIDS.push({ c: 1, x: 230, y: 206, r: 20 });                              // батут
+SOLIDS.push({ c: 1, x: 1038, y: 556, r: 4 }, { c: 1, x: 1086, y: 556, r: 4 }); // столбы арки
+[[440, 116, 100, 40], [1000, 420, 90, 40], [156, 392, 70, 50], [760, 520, 80, 40], [300, 200, 50, 30]].forEach(b => SOLIDS.push({ r: 1, x: b[0], y: b[1], w: b[2], h: b[3] })); // клумбы
+/* герои и звери, которые ходят по земле, не проходят сквозь предметы. Возвращает true, если пришлось отодвинуть */
+function pushOut(o, m0) {
+  let hit = false;
+  for (const s of SOLIDS) {
+    if (s.c) { const d = dist(o.x, o.y, s.x, s.y), m = s.r + m0; if (d < m) { if (d < 0.01) { o.x = s.x + m; hit = true; continue; } o.x = s.x + (o.x - s.x) / d * m; o.y = s.y + (o.y - s.y) / d * m; hit = true; } }
+    else if (o.x > s.x - m0 && o.x < s.x + s.w + m0 && o.y > s.y - 1 && o.y < s.y + s.h + 3) {
+      const dl = o.x - (s.x - m0), dr = s.x + s.w + m0 - o.x, du = o.y - (s.y - 1), dd = s.y + s.h + 3 - o.y, m = Math.min(dl, dr, du, dd);
+      if (m === dl) o.x = s.x - m0; else if (m === dr) o.x = s.x + s.w + m0; else if (m === du) o.y = s.y - 1; else o.y = s.y + s.h + 3; hit = true;
+    }
+  }
+  return hit;
+}
 const STATIC = [];
 TREES.forEach(([x, y, k]) => STATIC.push({ x, y, draw: (c, t) => drawTree(c, x, y, k, t) }));
 BALLOONS.forEach(([x, y], i) => STATIC.push({ x, y, draw: (c, t) => drawBalloons(c, x, y, t, i) }));
@@ -80,9 +98,10 @@ function takeShot() {
   }
   let pg = 0; for (const p of S.pigeons) if (inside(p.x, p.y - p.z - 3, f)) pg++;
   let ps = 0; for (const p of S.pests) if (inside(p.x, p.y - (p.kind === 'dog' ? 6 : 16), f)) ps++;
+  let cm = 0; if (S.camp) for (const m of S.camp.m) if (m.a > 0.3 && inside(m.x, m.y - 12, f)) cm++;
   const ct = inside(S.cat.x, S.cat.y - 6, f) ? 1 : 0, mk = S.monkeyOn > 0, notes = [];
   const dp = duckPos(), dinoIn = inside(142, 544, f), duckIn = inside(dp.x, dp.y - 3, f);
-  let pen = Math.max(0.1, 1 - 0.22 * pg - 0.25 * ct - 0.25 * ps); if (mk) pen *= 0.2;
+  let pen = Math.max(0.1, 1 - 0.22 * pg - 0.25 * ct - 0.25 * ps - Math.min(0.55, 0.14 * cm)); if (mk) pen *= 0.2;
   raw *= pen;
   let cap = '', who = '';
   if (top) { cap = top.cl.capFor(top.m); who = top.cl.name; }
@@ -95,6 +114,7 @@ function takeShot() {
     if (pg) notes.push('ГОЛУБЬ ВЛЕЗ В КАДР!'); if (ct) notes.push('КОТ ПОРТИТ ВИД!');
     for (const p of S.pests) if (inside(p.x, p.y - (p.kind === 'dog' ? 6 : 16), f)) { notes.push(p.kind === 'dog' ? 'СОБАКА ПРОБЕЖАЛА!' : 'ТУРИСТ ЛЕЗЕТ В КАДР!'); break; }
   }
+  if (cm) notes.push('ТАБОР В КАДРЕ!');
   if (mk) notes.push('МАРТЫШКА НА ОБЪЕКТИВЕ!');
   let pts = Math.round(raw / 10) * 10; if (raw > 0 && pts === 0) pts = 10;
   if (pts >= 80) S.combo = Math.min(5, S.combo + 1); else S.combo = 0;
@@ -118,7 +138,10 @@ function takeShot() {
   S.flash = 1; S.spark = 1; S.cd = 0.45; shutter();
   if (dinoIn) { DINO.roar = 1.3; addText(140, 500, 'РРРРР!', '#8aff7a', true); setTimeout(() => sfx('roar', 140, 560, 9999), 260); }
   if (duckIn) { DUCK.q = 0.7; addText(dp.x, dp.y - 26, 'КРЯ!', '#ffe14d', true); setTimeout(() => sfx('quack', dp.x, dp.y, 9999), 260); }
-  scareAll(f.cx, f.cy, f.w * 1.1 + 40); S.monkey.release();
+  // звуки после вспышки: реакции героев в кадре, потом испуганные звери
+  S.sfxDelay = 0.3;
+  seen.map(id => S.clients.find(c => c.id === id)).filter(Boolean).sort((a, b) => dist(a.x, a.y, f.cx, f.cy) - dist(b.x, b.y, f.cx, f.cy)).slice(0, 2).forEach((c, i) => reactClient(c.id, c.x, c.y, 0.3 + i * 0.15));
+  scareAll(f.cx, f.cy, f.w * 1.1 + 40); S.monkey.release(); S.sfxDelay = 0;
   if (pts >= 180) { beep(880, 0.1, 'square', 0.05); beep(1320, 0.15, 'square', 0.05, 0, 0.09); }
   else if (pts === 0) beep(140, 0.2, 'sawtooth', 0.05, 80);
   // статистика и достижения
@@ -139,23 +162,19 @@ function applyBonus(b) {
   beep(660, 0.08, 'square', 0.06); beep(990, 0.12, 'square', 0.06, 0, 0.07);
   S.st.bon[b.type] = 1; if (Object.keys(S.st.bon).length >= 5) unlock('bonus');
   if (b.type === 'coffee') S.speedT = BONUS_INFO.coffee.dur; else if (b.type === 'lens') S.lensT = BONUS_INFO.lens.dur; else if (b.type === 'clock') { S.time += 8; S.clockT = 2.5; } else if (b.type === 'x2') S.x2 = BONUS_INFO.x2.dur;
-  else if (b.type === 'flash') { scareAll(S.pl.x, S.pl.y, 260); S.safeT = BONUS_INFO.flash.dur; S.flash = 0.6; }
+  else if (b.type === 'flash') { S.sfxDelay = 0.25; scareAll(S.pl.x, S.pl.y, 260); S.sfxDelay = 0; S.safeT = BONUS_INFO.flash.dur; S.flash = 0.6; }
 }
 
 /* ===== Обновление ===== */
 const DINO = { roar: 0 }, DUCK = { q: 0 };
 const duckPos = () => ({ x: 640 + Math.cos(S.tt * 0.6) * 28, y: 362 + Math.sin(S.tt * 0.6) * 12 });
-const IDLE_VOICE = { clown: ['laugh', 3.6], fashion: ['camflash', 4.6], hipster: ['hello', 6], barista: ['cook', 3.4], grandpa: ['snore', 3.4, c => !c.awake], family: ['kids', 3.8], couple: ['kiss', 5.5], wedding: ['fanfare', 11], busker: ['guitar', 4], jogger: ['cheer', 6.5] };
-function idleVoices(dt) {
-  if (S.mode !== 'play') return;
-  for (const c of S.clients) {
-    const v = IDLE_VOICE[c.id]; if (!v) continue;
-    c._vt = (c._vt === undefined ? rnd(0, v[1]) : c._vt) - dt; if (c._vt > 0) continue;
-    if (dist(c.x, c.y, S.pl.x, S.pl.y) < (c.id === 'jogger' || c.id === 'wedding' ? 280 : 210) && (!v[2] || v[2](c))) { sfx(v[0], c.x, c.y); c._vt = v[1] * rnd(0.85, 1.3); } else c._vt = 0.4;
-  }
-}
 function updateEntities(dt) {
-  idleVoices(dt);
+  updateEntities0(dt);
+  for (const p of S.pests) if (pushOut(p, 5)) p.pick();
+  if (pushOut(S.cat, 4)) { S.cat.st = 'sit'; S.cat.timer = rnd(1, 3); }
+  if (S.monkey.st !== 'latch' && pushOut(S.monkey, 5) && (S.monkey.st === 'flee' || S.monkey.st === 'hop')) S.monkey.st = 'idle';
+}
+function updateEntities0(dt) {
   for (const c of S.clients) c.upd(dt);
   for (const p of S.pigeons) p.upd(dt);
   for (const p of S.pests) p.upd(dt);
@@ -235,9 +254,10 @@ function renderWorld(t) {
   for (const c of S.clients) if (vis(c)) items.push({ y: c.y, d: (cc, tt) => c.draw(cc, tt) });
   for (const p of S.pigeons) if (vis(p)) items.push({ y: p.y + (p.z > 0.5 ? 1000 : 0), d: cc => p.draw(cc) });
   for (const p of S.pests) if (vis(p)) items.push({ y: p.y, d: cc => p.draw(cc) });
+  if (S.camp) for (const m of S.camp.m) if (m.a > 0.02) items.push({ y: m.y, d: (cc, tt) => drawCampMember(cc, m, S.camp, tt) });
   if (vis(S.cat)) items.push({ y: S.cat.y, d: cc => S.cat.draw(cc) });
   if (vis(S.monkey)) items.push({ y: S.monkey.y + 1, d: cc => S.monkey.draw(cc) });
-  items.push({ y: S.pl.y, d: cc => { shadow(cc, S.pl.x, S.pl.y, 9); drawOksana(cc, S.pl.x, S.pl.y, { dir: S.pl.dir, ph: S.pl.ph, moving: S.pl.moving, flash: S.flash > 0.5, spark: S.spark }); } });
+  items.push({ y: S.pl.y, d: cc => { shadow(cc, S.pl.x, S.pl.y, 9); drawOksana(cc, S.pl.x, S.pl.y, { dir: S.pl.dir, ph: S.pl.ph, moving: S.pl.moving, flash: S.flash > 0.5, spark: S.spark, torch: S.dusk }); } });
   items.sort((a, b) => a.y - b.y);
   for (const it of items) it.d(ctx, t);
   for (const b of S.bonuses) b.draw(ctx);
@@ -286,6 +306,14 @@ function drawFrame() {
 function fmtTime(s) { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function drawBonusRadar() {
   const cxm = VW / 2, minY = 44, maxY = VH - 48, cym = (minY + maxY) / 2;
+  if (S.camp) {
+    const m = S.camp.m[Math.min(4, S.camp.m.length - 1)], sx = m.x - S.cam.x, sy = m.y - S.cam.y - 18;
+    if (!(sx > 6 && sx < VW - 6 && sy > 26 && sy < VH - 6) && m.a > 0.02) {
+      const dx = sx - cxm, dy = sy - cym, k = Math.min((cxm - 22) / Math.max(1, Math.abs(dx)), (cym - minY) / Math.max(1, Math.abs(dy)), 1), mx = Math.round(cxm + dx * k), my = Math.round(cym + dy * k), pulse = Math.sin(S.tt * 8) > 0;
+      disc(ctx, mx, my, pulse ? 13 : 12, '#ff9a6b'); disc(ctx, mx, my, 10, '#fff3e6'); pix(ctx, mx - 3, my - 5, ICON.note.rows, { b: '#d6336c' }, 1);
+      const L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L; for (let i = 0; i < 4; i++) { const s = 4 - i; R(ctx, mx + ux * (14 + i * 2) - s / 2, my + uy * (14 + i * 2) - s / 2, s, s, '#ff9a6b'); }
+    }
+  }
   for (const b of S.bonuses) {
     const sx = b.x - S.cam.x, sy = b.y - S.cam.y - 18;
     if (sx > 6 && sx < VW - 6 && sy > 26 && sy < VH - 6) continue;
@@ -376,6 +404,7 @@ function drawHelp() {
     });
     T('ЧЕМ ДАЛЬШЕ, ТЕМ СЛОЖНЕЕ', 24, 236, '#ffe14d');
     textLines(['5 ЭТАПОВ ПО ' + STAGE_LEN + ' СЕКУНД. СНАЧАЛА 6 КЛИЕНТОВ,', 'ПОТОМ ВЫХОДЯТ МУЗЫКАНТ, ПАРА, БЕГУН И СВАДЬБА.', 'ПОДТЯГИВАЮТСЯ ТУРИСТЫ, СОБАКИ И СТАЯ ГОЛУБЕЙ.', 'ГОЛУБИ И МАРТЫШКА С КАЖДЫМ ЭТАПОМ АКТИВНЕЕ.'], 24, 250, '#ffffff');
+    T('ТАБОР  (ПРИ 400 ОЧКАХ)', 24, 294, '#ff9a6b'); textLines(['ИДЁТ ПО ЦЕНТРУ КАРТЫ. ТОЛПА В КАДРЕ: -14% ЗА', 'КАЖДОГО. ДЕТИ УНОСЯТ БОНУСЫ — ПОДБЕРИ ПЕРВОЙ.'], 24, 306, '#ffffff');
   } else if (pg === 2) {
     const rows = [
       ['ЯСНО', 'clear', ['ПОГОДА БЕЗ ПОМЕХ.', 'ЛУЧШЕЕ ВРЕМЯ ГНАТЬСЯ ЗА ОЧКАМИ.']],
@@ -444,11 +473,37 @@ function drawEnd() {
   if (S.endT > 1.2 && Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — ЕЩЁ СМЕНА', VW / 2, 338, '#8aff7a', 8, 'center');
   T('РЕКОРД: ' + S.best, 8, 338, '#ffe14d');
 }
+/* ===== Вечер: тёмный слой с вырезами света от фонарей и фонарика Оксаны, лунное свечение ===== */
+const NC = document.createElement('canvas'); NC.width = VW; NC.height = VH;
+function torchPos() { const d = S.pl.dir; return { x: Math.round(S.pl.x) + (d > 0 ? -7 : 6), y: Math.round(S.pl.y) - 14 }; }
+function glow(c, x, y, r, a, col) { const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col.replace('A', a)); g.addColorStop(0.45, col.replace('A', a * 0.45)); g.addColorStop(1, col.replace('A', 0)); c.fillStyle = g; c.fillRect(x - r, y - r, r * 2, r * 2); }
+function drawNight() {
+  const dk = S.dusk; if (!dk || dk < 0.02) return;
+  const c = NC.getContext('2d'), cx = Math.round(S.cam.x), cy = Math.round(S.cam.y);
+  c.globalCompositeOperation = 'source-over'; c.globalAlpha = 1; c.clearRect(0, 0, VW, VH);
+  c.fillStyle = 'rgba(14,18,64,' + (0.82 * dk).toFixed(3) + ')'; c.fillRect(0, 0, VW, VH);
+  c.globalCompositeOperation = 'destination-out';
+  const lamps = LAMPS.map(l => [l[0] - cx, l[1] - 33 - cy]).filter(l => l[0] > -100 && l[0] < VW + 100 && l[1] > -100 && l[1] < VH + 100);
+  for (const [lx, ly] of lamps) glow(c, lx, ly, 78, 0.85, 'rgba(0,0,0,A)');
+  const pl = S.pl, tp = torchPos(), px = pl.x - cx, py = pl.y - 12 - cy, tx = tp.x - cx, ty = tp.y - cy;
+  glow(c, px, py, 40, 0.55, 'rgba(0,0,0,A)');
+  let ax = (S.fr ? S.fr.cx : pl.x + pl.dir * 50) - pl.x, ay = (S.fr ? S.fr.cy : pl.y) - pl.y; const al = Math.hypot(ax, ay) || 1; ax /= al; ay /= al;
+  for (let k = 1; k <= 9; k++) glow(c, tx + ax * k * 9, ty + ay * k * 9, 6 + k * 3.2, 0.4, 'rgba(0,0,0,A)');
+  c.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = 1; ctx.drawImage(NC, 0, 0);
+  ctx.globalCompositeOperation = 'lighter';
+  for (const [lx, ly] of lamps) glow(ctx, lx, ly, 70, 0.22 * dk, 'rgba(255,160,60,A)');
+  for (let k = 1; k <= 9; k++) glow(ctx, tx + ax * k * 9, ty + ay * k * 9, 6 + k * 3.2, 0.06 * dk, 'rgba(255,240,170,A)');
+  ctx.globalCompositeOperation = 'source-over';
+  const mx = 34, my = 44; glow(ctx, mx, my, 34, 0.35 * dk, 'rgba(150,180,255,A)');
+  ctx.globalAlpha = dk; disc(ctx, mx, my, 9, '#f4f1d6'); disc(ctx, mx + 4, my - 2, 7, '#10163c'); R(ctx, mx - 5, my + 1, 2, 2, '#d8d6bb'); R(ctx, mx - 3, my - 4, 1, 1, '#d8d6bb'); ctx.globalAlpha = 1;
+}
 function render() {
   renderWorld(S.tt);
   if (S.mode === 'play') drawWeather();
   capturePending();
   if (S.mode === 'play') {
+    drawNight();
     if (S.fr) drawFrame(); drawHUD();
     if (S.flash > 0) {
       ctx.globalAlpha = S.flash * 0.9; ctx.fillStyle = '#fffbe8'; ctx.fillRect(0, 0, VW, VH);

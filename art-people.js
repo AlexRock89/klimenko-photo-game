@@ -155,6 +155,10 @@ function drawOksana(c, x, y, o) {
   R(c, cx - 4, cy - 1, 9, 6, '#26262e'); R(c, cx - 4, cy - 2, 9, 1, '#b9bcc8'); R(c, cx - 4, cy + 1, 9, 1, '#3a3a45');
   disc(c, cx, cy + 2, 2, '#2e5f94'); R(c, cx - 1, cy + 1, 1, 1, '#ffffff');
   R(c, cx + 3, cy - 3, 2, 1, '#ff4d6d');
+  if (o.torch > 0.3) {
+    const hx = d > 0 ? Math.round(x) - 7 : Math.round(x) + 6, hy = by - 12;
+    R(c, hx - 1, hy, 3, 5, '#2f3445'); R(c, hx - 1, hy + 1, 3, 1, '#e0483f'); R(c, hx - 2, hy - 3, 5, 3, '#9aa3bb'); R(c, hx - 1, hy - 4, 3, 1, '#fff6a0'); c.globalAlpha = 0.45; disc(c, hx, hy - 5, 3, '#fff3a0'); c.globalAlpha = 1;
+  }
   if (o.spark > 0.02) {
     const k = 1 - o.spark, s = Math.sin(Math.min(1, k * 1.15) * Math.PI), L = Math.round(2 + 8 * s), D = Math.round(1 + 4 * s), sx = cx, sy = cy + 1;
     c.globalAlpha = Math.min(1, o.spark * 1.6) * 0.45; disc(c, sx, sy, 4 + 6 * s, '#fff3a0');

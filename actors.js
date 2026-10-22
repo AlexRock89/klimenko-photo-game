@@ -276,7 +276,7 @@ class MonkeyB {
       if (this.hold <= 0) { S.monkeyOn = 0; this.flee(pl.x, pl.y); }
     } else if (this.st === 'flee') { if (this.mv(this.tx, this.ty, 110, dt) < 4) { this.st = 'idle'; this.timer = rnd(14, 22) / (S.diff || 1); } }
   }
-  release() { if (this.st === 'latch') { S.monkeyOn = 0; this.flee(S.pl.x, S.pl.y); } }
+  release() { if (this.st === 'latch') { sfx('monkey', this.x, this.y, 9999); S.monkeyOn = 0; this.flee(S.pl.x, S.pl.y); } }
   scare(cx, cy, rad) { if (this.st === 'latch') { if (dist(S.pl.x, S.pl.y, cx, cy) < rad) { sfx('monkey', this.x, this.y, 9999); this.release(); } } else if (dist(this.x, this.y, cx, cy) < rad) { sfx('monkey', this.x, this.y, 9999); this.flee(cx, cy); } }
   draw(c) {
     if (this.st === 'latch') { monkey(c, this.x, this.y - 22, { dir: this.dir, ph: this.ph, moving: false }); return; }
@@ -288,6 +288,7 @@ function touristSprite(c, x, y, ph, moving, flash) {
   person(c, x, y, { skin: '#f1c9a6', hair: '#6b4226', hs: 'short', hat: 'cap', hatc: '#ffd23f', hatc2: '#ffb000', glasses: '#1d1d2b', top: '#ff7a3d', pants: '#4aa3ff', shoes: '#ffffff', moving: moving, ph: ph, r: 2, l: 0, mouth: flash ? 'open' : 'smile' });
   for (let i = 0; i < 3; i++) R(c, x - 3 + i * 3, y - 14 + (i % 2) * 2, 2, 2, '#ffe14d');
   R(c, x + 5, y - 40, 1, 16, '#444'); R(c, x + 3, y - 46, 6, 6, '#222'); R(c, x + 4, y - 45, 4, 4, flash ? '#ffffff' : '#4aa3ff');
+  if (flash) { c.globalAlpha = 0.5; disc(c, x + 6, y - 43, 7, '#fff3a0'); c.globalAlpha = 1; R(c, x - 2, y - 43, 17, 1, '#fff'); R(c, x + 6, y - 51, 1, 17, '#fff'); R(c, x + 2, y - 47, 1, 1, '#fff'); R(c, x + 10, y - 47, 1, 1, '#fff'); R(c, x + 2, y - 39, 1, 1, '#fff'); R(c, x + 10, y - 39, 1, 1, '#fff'); R(c, x + 5, y - 44, 3, 3, '#fff'); }
 }
 class Tourist {
   constructor(x, y) { this.kind = 'tourist'; this.x = x; this.y = y; this.tx = x; this.ty = y; this.st = 'walk'; this.timer = 0; this.dir = 1; this.ph = 0; this.pick(); }
@@ -296,9 +297,9 @@ class Tourist {
     this.ph += dt * 6;
     if (this.st === 'walk') {
       const d = dist(this.x, this.y, this.tx, this.ty);
-      if (d < 4) { this.st = 'selfie'; this.timer = 1.4; sfx('click', this.x, this.y); }
+      if (d < 4) { this.st = 'selfie'; this.timer = 1.4; this.c2 = false; sfx('click', this.x, this.y); }
       else { this.x += (this.tx - this.x) / d * 24 * dt; this.y += (this.ty - this.y) / d * 24 * dt; this.dir = this.tx > this.x ? 1 : -1; }
-    } else { this.timer -= dt; if (this.timer <= 0) { this.st = 'walk'; this.pick(); } }
+    } else { this.timer -= dt; if (this.timer < 0.7 && !this.c2) { this.c2 = true; sfx('click', this.x, this.y); } if (this.timer <= 0) { this.st = 'walk'; this.pick(); } }
   }
   scare() { }
   draw(c) { shadow(c, this.x, this.y, 8); touristSprite(c, this.x, this.y, this.ph, this.st === 'walk', this.st === 'selfie' && Math.floor(this.timer * 8) % 2 === 0); }
@@ -309,7 +310,7 @@ class RunDog {
   upd(dt) {
     this.t += dt; this.ph += dt * 12; this.fast = Math.max(0, this.fast - dt);
     const d = dist(this.x, this.y, this.tx, this.ty);
-    if (d < 8) { this.pick(); if (Math.random() < 0.5) sfx('bark', this.x, this.y); return; }
+    if (d < 8) { this.pick(); return; }
     const sp = this.fast > 0 ? 125 : 80, nx = (this.tx - this.x) / d, ny = (this.ty - this.y) / d, zz = Math.sin(this.t * 5) * 0.8;
     this.x = clamp(this.x + (nx - ny * zz) * sp * dt, 30, WW - 30); this.y = clamp(this.y + (ny + nx * zz) * sp * dt, 70, WH - 24); this.dir = nx >= 0 ? 1 : -1;
   }
@@ -338,5 +339,96 @@ class Bonus {
     c.globalAlpha = 0.9; disc(c, this.x, this.y - 22 + bob, 15, info.col); c.globalAlpha = 1; disc(c, this.x, this.y - 22 + bob, 13, '#ffffff');
     icon(c, info.ic, this.x - 10, this.y - 30 + bob, 2);
     if (this.type === 'x2') { c.font = '8px ' + FONT; c.textBaseline = 'top'; c.fillStyle = '#7a3ff2'; c.fillText('x2', this.x - 7, this.y - 25 + bob); }
+  }
+}
+
+/* ===== Цыганский табор: идёт по центральной линии карты, толпа лезет в кадр, дети воруют бонусы ===== */
+const CAMP_DIRS = [
+  { n: 'СЛЕВА НАПРАВО', h: true, sgn: 1 }, { n: 'СПРАВА НАЛЕВО', h: true, sgn: -1 },
+  { n: 'СВЕРХУ ВНИЗ', h: false, sgn: 1 }, { n: 'СНИЗУ ВВЕРХ', h: false, sgn: -1 }
+];
+const campBump = (u, c, w) => Math.abs(u - c) < w ? Math.pow(Math.cos(Math.PI / 2 * (u - c) / w), 2) : 0;
+const CAMP_LEN = { h: 1280 + 340, v: 720 + 340 };
+class Camp {
+  constructor(di) {
+    this.di = di; this.d = CAMP_DIRS[di]; this.s = 0; this.speed = 64; this.done = false; this.t = 0;
+    this.len = this.d.h ? CAMP_LEN.h : CAMP_LEN.v;
+    const spec = [['guitar', 0, 0], ['girl', 32, -9], ['horse', 66, 7], ['girl', 104, 9], ['kid', 130, -12], ['tamb', 158, 0], ['kid', 182, 12], ['girl', 210, -7], ['kid', 236, 3]];
+    this.m = spec.map(([k, off, lat], i) => ({ k, off, lat, i, x: -999, y: -999, st: 'follow', ph: rnd(0, 6), carry: 0, cool: rnd(2, 5), pal: i % 3, tgt: null, a: 0 }));
+    for (const m of this.m) { const p = this.slot(m); m.x = p.x; m.y = p.y; }
+  }
+  /* точка на пути для участника: a — расстояние вдоль линии */
+  slot(m) {
+    const u = this.s - m.off, d = this.d;
+    if (d.h) { const a = d.sgn > 0 ? -70 + u : WW + 70 - u; return { x: a, y: 360 + 62 * campBump(a, 640, 170) + m.lat, a }; }
+    const a = d.sgn > 0 ? 10 + u : WH + 50 - u; return { x: 640 + 84 * campBump(a, 360, 150) + m.lat, y: a, a };
+  }
+  lead() { return this.m[0]; }
+  upd(dt) {
+    this.t += dt; this.s += this.speed * dt;
+    for (const m of this.m) {
+      m.ph += dt * (m.k === 'horse' ? 5 : 8); const p = this.slot(m);
+      const lo = this.d.h ? 20 : 40, hi = this.d.h ? WW - 20 : WH - 30; m.a = clamp(Math.min(p.a - lo, hi - p.a) / 40, 0, 1);
+      if (m.k !== 'kid') { m.x = p.x; m.y = p.y; continue; }
+      m.cool -= dt;
+      if (m.st === 'follow') {
+        m.x += (p.x - m.x) * Math.min(1, dt * 10); m.y += (p.y - m.y) * Math.min(1, dt * 10);
+        if (m.cool <= 0 && m.a >= 1) {
+          let best = null, bd = 330; for (const b of S.bonuses) { const dd = dist(b.x, b.y, m.x, m.y); if (dd < bd) { bd = dd; best = b; } }
+          if (best) { m.st = 'chase'; m.tgt = best; addText(m.x, m.y - 26, '!', '#ff9a6b', true); } else m.cool = 0.8;
+        }
+      } else if (m.st === 'chase') {
+        const b = m.tgt; if (!b || S.bonuses.indexOf(b) < 0) { m.st = 'back'; continue; }
+        const d = dist(m.x, m.y, b.x, b.y);
+        if (d < 8) { S.bonuses.splice(S.bonuses.indexOf(b), 1); m.carry = 1; m.st = 'back'; S.st.stolen = (S.st.stolen || 0) + 1; addText(m.x, m.y - 28, 'УТАЩИЛИ БОНУС!', '#ff9a6b'); beep(520, 0.1, 'triangle', 0.06, 260); beep(300, 0.14, 'triangle', 0.06, 180, 0.1); }
+        else { m.x += (b.x - m.x) / d * 125 * dt; m.y += (b.y - m.y) / d * 125 * dt; m.fl = b.x < m.x; }
+      } else {
+        const d = dist(m.x, m.y, p.x, p.y); if (d < 10) { m.st = 'follow'; m.cool = rnd(5, 8); }
+        else { m.x += (p.x - m.x) / d * 135 * dt; m.y += (p.y - m.y) / d * 135 * dt; m.fl = p.x < m.x; }
+      }
+    }
+    if (this.s - this.m[this.m.length - 1].off > this.len) this.done = true;
+  }
+}
+function drawCampMember(c, m, camp, t) {
+  if (m.a <= 0.02) return; c.globalAlpha = m.a;
+  const x = Math.round(m.x), y = Math.round(m.y), sw = Math.round(Math.sin(m.ph * 2) * 2), beat = Math.sin(t * 9 + m.i) > 0;
+  if (m.k === 'horse') drawCampHorse(c, x, y, m.ph, camp.d);
+  else if (m.k === 'kid') {
+    shadow(c, x, y, 5); const run = m.st !== 'follow', f = Math.sin(m.ph * (run ? 1.6 : 1)) > 0 ? 1 : 0, col = ['#ffd23f', '#4aa3ff', '#ff6b9a'][m.pal];
+    R(c, x - 3, y - 5, 2, 5 - f, '#3a3f6b'); R(c, x + 1, y - 5, 2, 5 - (1 - f), '#3a3f6b'); R(c, x - 4, y - 11, 8, 6, col); R(c, x - 5, y - 10 + f, 1, 4, '#d9a47a'); R(c, x + 4, y - 10 + (1 - f), 1, 4, '#d9a47a');
+    R(c, x - 3, y - 17, 7, 6, '#d9a47a'); R(c, x - 3, y - 18, 7, 3, '#1b1220'); R(c, x - 2, y - 14, 1, 1, '#222'); R(c, x + 1, y - 14, 1, 1, '#222');
+    if (m.st === 'chase') R(c, x - 1, y - 12, 3, 1, '#fff'); if (m.carry) { R(c, x + 4, y - 14, 5, 5, '#8a5a2b'); R(c, x + 5, y - 15, 3, 1, '#c98650'); R(c, x + 6, y - 12, 1, 1, '#ffd23f'); }
+  } else if (m.k === 'girl') {
+    const dc = ['#e63946', '#ffb703', '#7a3ff2'][m.pal], tc = ['#fff', '#ffe3a8', '#ffd6e8'][m.pal], up = beat ? 2 : 1;
+    shadow(c, x, y, 9);
+    const fl = Math.round(Math.sin(t * 9 + m.i) * 2);
+    R(c, x - 9 + fl, y - 6, 18 - fl * 2, 3, dc); R(c, x - 8 - fl, y - 4, 16 + fl * 2, 2, '#ffd23f');
+    person(c, x, y - (beat ? 1 : 0), { skin: '#e7b48a', hair: '#1b1220', hs: 'long', hat: 'bandana', hatc: ['#ffd23f', '#e63946', '#4aa3ff'][m.pal], top: tc, dress: dc, shoes: '#c0392b', moving: true, ph: m.ph, l: up, r: beat ? 1 : 2, mouth: 'open', earring: true });
+  } else {
+    shadow(c, x, y, 9);
+    person(c, x, y, { skin: '#d9a47a', hair: '#1b1220', hs: 'short', hat: m.k === 'guitar' ? 'fedora' : 'bandana', hatc: m.k === 'guitar' ? '#6b2d1a' : '#e63946', top: m.k === 'guitar' ? '#c0392b' : '#2f9e6b', pants: '#2b2f4a', shoes: '#3a2012', stache: '#1b1220', moving: true, ph: m.ph, l: m.k === 'tamb' ? 2 : 3, r: 3, mouth: 'open' });
+    if (m.k === 'guitar') { const g = beat ? 1 : 0; R(c, x - 11, y - 16 + g, 14, 2, '#6b3b1e'); R(c, x - 13, y - 17 + g, 3, 4, '#3a2012'); ell(c, x + 3, y - 9 + g, 6, 4, '#e0792b'); disc(c, x + 3, y - 9 + g, 1, '#3a2012'); }
+    else { const ty = y - 33 + (beat ? 0 : 2); disc(c, x + 9, ty, 4, '#ffd23f'); disc(c, x + 9, ty, 2, '#6b3b1e'); R(c, x + 4, ty, 1, 1, '#fff'); R(c, x + 13, ty, 1, 1, '#fff'); R(c, x + 9, ty - 4, 1, 1, '#fff'); }
+  }
+  if (m.k === 'guitar' || m.k === 'tamb' || m.k === 'girl') { const ph = (t * 1.3 + m.i * 0.37) % 1; c.globalAlpha = m.a * (1 - ph); pix(c, x + 8 + Math.round(Math.sin(ph * 8) * 2), y - 38 - ph * 14, ICON.note.rows, { b: ['#ffe14d', '#ff9ad0', '#8aff7a'][m.i % 3] }, 1); }
+  c.globalAlpha = 1;
+}
+function drawCampHorse(c, x, y, ph, d) {
+  const br = '#8a5a2b', dk = '#5d3a1a', mane = '#1e120a', sw = Math.round(Math.sin(ph) * 2);
+  if (d.h) {
+    const f = d.sgn; shadow(c, x, y, 17);
+    for (const [lx, o] of [[-10, 1], [-6, 0], [6, 0], [10, 1]]) { const lf = Math.round(Math.sin(ph + o * 3.1) * 2); R(c, x + lx - 1, y - 9, 3, 8 - Math.max(0, lf), dk); R(c, x + lx - 1, y - 2 - Math.max(0, lf) + 1, 3, 2, '#222'); }
+    ell(c, x, y - 14, 15, 7, br); ell(c, x, y - 11, 11, 3, '#b07c46');
+    R(c, x - 7, y - 21, 13, 5, '#e63946'); R(c, x - 7, y - 17, 13, 1, '#ffd23f'); R(c, x - 7, y - 21, 13, 1, '#ffd23f');
+    for (let i = 0; i < 5; i++) R(c, x + f * (11 + i * 1.6) - 2, y - 17 - i * 2, 4, 4, br);
+    ell(c, x + f * 19, y - 26, 5, 3, br); R(c, x + f * 22 - 1, y - 25, 2, 2, dk); R(c, x + f * 18, y - 29, 2, 3, br); R(c, x + f * 18, y - 28, 1, 1, '#fff');
+    R(c, x + f * 12, y - 28, 2, 10, mane); R(c, x - f * 17 - 1, y - 17 + sw, 3, 9, mane); R(c, x - f * 17, y - 9 + sw, 2, 2, mane);
+  } else {
+    const front = d.sgn > 0; shadow(c, x, y, 11);
+    for (const [lx, o] of [[-6, 0], [4, 1]]) { const lf = Math.round(Math.sin(ph + o * 3.1) * 2); R(c, x + lx, y - 10, 3, 9 - Math.max(0, lf), dk); R(c, x + lx, y - 2 - Math.max(0, lf) + 1, 3, 2, '#222'); }
+    ell(c, x, y - 15, 8, 9, br); R(c, x - 6, y - 20, 12, 4, '#e63946'); R(c, x - 6, y - 17, 12, 1, '#ffd23f');
+    if (front) { ell(c, x, y - 28, 4, 6, br); R(c, x - 4, y - 34, 2, 3, br); R(c, x + 2, y - 34, 2, 3, br); R(c, x - 3, y - 29, 1, 1, '#222'); R(c, x + 2, y - 29, 1, 1, '#222'); R(c, x - 2, y - 24, 4, 2, '#b07c46'); R(c, x - 1, y - 36, 2, 6, mane); }
+    else { ell(c, x, y - 27, 4, 5, br); R(c, x - 1, y - 33, 2, 6, mane); R(c, x - 1, y - 12 + sw, 3, 9, mane); }
   }
 }

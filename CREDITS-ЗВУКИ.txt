@@ -1,0 +1,18 @@
+Звуки игры «Обычный день фотографа» — источники записей
+
+CC0 (свободно, без указания автора):
+- Затвор камеры, вспышка, поцелуй, аплодисменты: The Studio SoundSFX (Freesound CC0: RegoneFF, _stubb, jcallison, Sadiquecat, tec_studio)
+- Рык динозавра (основа): OpenGameArt "80 CC0 creature SFX #2" (rubberduck)
+- Звон бокала: OpenGameArt "100 CC0 Foley" (rubberduck)
+- Кастрюля: Kenney RPG Audio (CC0)
+- Укулеле: FreePD (CC0)
+
+CC BY-NC 3.0 (только некоммерческое использование, с указанием источника):
+- Смех клоуна и детей, храп, шипение готовки, квохтанье: датасет ESC-50 (Karol J. Piczak), записи с Freesound
+  https://github.com/karolpiczak/ESC-50
+
+Лицензия не указана автором подборки (личный некоммерческий проект):
+- Утка, мартышка, кот, собака, рык льва: github.com/XQillZ/Sound
+- Фанфары трубы: github.com/Morcsine/sounds
+
+Если игра станет коммерческой, эти записи нужно заменить на свои или на CC0.

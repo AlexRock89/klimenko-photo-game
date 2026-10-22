@@ -100,6 +100,7 @@ const SCHEDULE = [
   { t: 80, do: () => arrivePest('dog', 'СБЕЖАЛА СОБАКА', 'НОСИТСЯ ПО ПАРКУ И ПОРТИТ КАДРЫ') },
   { t: 96, do: () => arriveClient('jogger', 'ВЫБЕЖАЛ БЕГУН', 'БЕГАЕТ ПО КРАЮ ПАРКА') },
   { t: 116, do: () => { for (let i = 0; i < 2; i++) { const p = new PigeonB(rnd(80, 1200), rnd(100, 640)); S.pigeons.push(p); } toast('ПРИЛЕТЕЛА СТАЯ', '+2 ГОЛУБЯ В ПАРКЕ', '#c9d0e0'); sfx('flutter', S.pl.x, S.pl.y); } },
+  { t: 120, do: () => { toast('НАСТУПАЕТ ВЕЧЕР', 'ЗАЖИГАЮТСЯ ФОНАРИ, У ОКСАНЫ ФОНАРИК', '#c9b6ff'); beep(392, 0.12, 'sine', 0.05); beep(294, 0.2, 'sine', 0.05, 0, 0.12); } },
   { t: 132, do: () => arriveClient('wedding', 'ПРИШЛА СВАДЬБА', 'ВНИЗУ СПРАВА, У АРКИ') },
   { t: 152, do: () => arrivePest('tourist', 'ВТОРОЙ ТУРИСТ', 'ТЕПЕРЬ ИХ ДВОЕ') },
   { t: 164, do: () => arrivePest('dog', 'ЕЩЁ ОДНА СОБАКА', 'ДВА ХВОСТА — ДВОЕ ПОМЕХ') }
@@ -172,7 +173,7 @@ function shotHint(cl, f) {
 
 /* ---------- Старт и обновление ---------- */
 function initRun() {
-  S.stage = 0; S.diff = 1; S.sched = 0; S.toasts = []; S.newAch = []; S.pests = [];
+  S.stage = 0; S.diff = 1; S.sched = 0; S.toasts = []; S.newAch = []; S.pests = []; S.camp = null; S.campN = 0; S.campNext = 400; S.dusk = 0;
   S.st = { shots: 0, bad: 0, uniq: {}, bon: {}, wx: {} };
   S.hiddenClients = S.clients.filter(c => HIDDEN_AT_START.includes(c.id));
   S.clients = S.clients.filter(c => !HIDDEN_AT_START.includes(c.id));
@@ -180,4 +181,14 @@ function initRun() {
   S.wx = null; setWeather(first, true); S.st.wx[first] = 1;
   toast('СМЕНА НАЧАЛАСЬ: ' + WX_NAME[first], WX_TOAST[first][1], WX_COL[first]);
 }
-function updateSystems(dt) { updateWeather(dt); updateStages(dt); updateToasts(dt); for (const p of S.pests) p.upd(dt); }
+/* Табор: первый раз при 400 очках, потом через каждые +500 очков, не больше 3 раз за смену */
+function startCamp() {
+  const di = Math.floor(Math.random() * 4); S.camp = new Camp(di); S.campN++; S.campNext = S.score + 500;
+  toast('ПРИШЁЛ ТАБОР: ' + CAMP_DIRS[di].n, 'ТОЛПА В КАДРЕ, ДЕТИ ВОРУЮТ БОНУСЫ', '#ff9a6b');
+  beep(330, 0.1, 'triangle', 0.06); beep(494, 0.1, 'triangle', 0.06, 0, 0.1); beep(659, 0.16, 'triangle', 0.06, 0, 0.2); play('guitar', 0.25, 1, 0.2);
+}
+function updateCamp(dt) {
+  if (S.camp) { S.camp.upd(dt); if (S.camp.done) S.camp = null; }
+  else if (S.mode === 'play' && S.campN < 3 && S.score >= S.campNext && S.time > 25) startCamp();
+}
+function updateSystems(dt) { { const k = clamp((S.t - 118) / 28, 0, 1); S.dusk = k * k * (3 - 2 * k); } updateWeather(dt); updateStages(dt); updateToasts(dt); for (const p of S.pests) p.upd(dt); updateCamp(dt); }

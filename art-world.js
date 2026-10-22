@@ -31,7 +31,7 @@ function makeGround() {
     const cols = ['#ff4d6d', '#ffd23f', '#ffffff', '#c77dff', '#ff9f1c'];
     for (let i = 0; i < w * h / 26; i++) { const fx = x + 2 + Math.floor(rn() * (w - 6)), fy = y + 2 + Math.floor(rn() * (h - 6)); const col = cols[Math.floor(rn() * cols.length)]; R(c, fx, fy, 3, 3, col); R(c, fx + 1, fy + 1, 1, 1, '#ffd23f'); }
   };
-  bed(440, 116, 100, 40); bed(1000, 420, 90, 40); bed(150, 336, 70, 50); bed(760, 520, 80, 40); bed(300, 200, 50, 30);
+  bed(440, 116, 100, 40); bed(1000, 420, 90, 40); bed(156, 392, 70, 50); bed(760, 520, 80, 40); bed(300, 200, 50, 30);
   // конфетти и лужицы
   const cc = ['#ff4d6d', '#ffd23f', '#4aa3ff', '#c77dff', '#fff'];
   for (let i = 0; i < 160; i++) R(c, rn() * WW, rn() * WH, 2, 2, cc[Math.floor(rn() * cc.length)]);
