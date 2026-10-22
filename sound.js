@@ -64,7 +64,7 @@ function setAmbient(type) {
 }
 function ambientTick() {
   if (!AMB) return;
-  try { AMB.g.gain.value = (S.mute || S.help || S.mode !== 'play') ? 0 : AMB.base * (AMB.type === 'wind' ? 0.7 + 0.3 * Math.sin(S.tt * 0.8) : 1); } catch (e) { }
+  try { AMB.g.gain.value = (S.mute || S.help || S.portrait || S.mode !== 'play') ? 0 : AMB.base * (AMB.type === 'wind' ? 0.7 + 0.3 * Math.sin(S.tt * 0.8) : 1); } catch (e) { }
 }
 
 /* Музыка: простой цикл из басса, арпеджио и ритма. Темп растёт вместе со сложностью */
@@ -81,7 +81,7 @@ function musicStep(a, t, step, sd) {
 }
 function musicLoop() {
   const a = AC; if (!a) return;
-  const want = !S.mute && !S.noMusic && !S.help && (S.mode === 'title' || S.mode === 'play');
+  const want = !S.mute && !S.noMusic && !S.help && !S.portrait && (S.mode === 'title' || S.mode === 'play');
   if (!want) { MUS.next = 0; return; }
   const sd = 60 / (120 + (S.stage || 0) * 8) / 4;
   if (!MUS.next || MUS.next < a.currentTime - 0.2) MUS.next = a.currentTime + 0.05;

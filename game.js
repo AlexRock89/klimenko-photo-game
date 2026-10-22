@@ -6,6 +6,7 @@ const S = {
   cam: { x: 440, y: 300 }, pl: { x: 640, y: 470, ph: 0, moving: false, dir: 1 }, endT: 0, bonuses: [], bonusT: 4,
   pending: null, monkeyOn: 0, fr: null, aimOnClient: false, clients: [], pigeons: [], cat: null, monkey: null,
   shotReq: false, mute: false, noMusic: false, banner: null, hint: 0, top: [], rank: '', newBest: false, help: false, helpPage: 0, alert: null,
+  touch: false, joy: { on: false, id: -1, x: 0, y: 0, ox: 0, oy: 0, kx: 0, ky: 0 }, aimId: -1, intro: 0, portrait: false,
   stage: 0, diff: 1, sched: 0, toasts: [], wx: null, st: null, ach: {}, newAch: [], pests: [], hiddenClients: []
 };
 const canvas = document.getElementById('game');
@@ -45,7 +46,7 @@ function scareAll(cx, cy, rad) { for (const p of S.pigeons) p.scare(cx, cy, rad)
 function startGame() {
   Object.assign(S, { mode: 'play', t: 0, time: SHIFT, score: 0, combo: 0, x2: 0, speedT: 0, lensT: 0, safeT: 0, clockT: 0, shots: [], texts: [], flash: 0, cd: 0, focus: 0, monkeyOn: 0, bonusT: 4, banner: null, hint: 8, pending: null, shotReq: false, newBest: false, help: false, helpPage: 0, alert: null });
   S.pl.x = 640; S.pl.y = 470; S.pl.dir = 1; S.cam.x = clamp(S.pl.x - VW / 2, 0, WW - VW); S.cam.y = clamp(S.pl.y - VH / 2, 0, WH - VH);
-  buildWorld(); initRun(); beep(520, 0.1, 'square', 0.06); beep(780, 0.15, 'square', 0.06);
+  buildWorld(); initRun(); startTouchIntro(); beep(520, 0.1, 'square', 0.06); beep(780, 0.15, 'square', 0.06);
 }
 function endGame() {
   S.mode = 'end'; S.endT = 0; S.time = 0; S.top = S.shots.filter(s => s.img).sort((a, b) => b.score - a.score).slice(0, 6);
@@ -145,8 +146,10 @@ function updateEntities(dt) {
   for (const t of S.texts) t.t += dt; S.texts = S.texts.filter(t => t.t < 1.5);
 }
 function update(dt) {
-  S.tt += dt;
+  S.tt += dt; S.portrait = isPortrait();
+  if (S.portrait) return;
   if (S.help) return;
+  if (S.mode === 'play' && S.intro > 0) { S.intro -= dt; return; }
   if (S.mode !== 'play') {
     updateEntities(dt); S.cam.x = 420 + Math.sin(S.tt * 0.08) * 260; S.cam.y = 260 + Math.cos(S.tt * 0.06) * 120; S.fr = null;
     if (S.mode === 'end') S.endT += dt; return;
@@ -157,6 +160,7 @@ function update(dt) {
   // движение
   const k = S.keys, pl = S.pl;
   let dx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0), dy = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0);
+  if (S.joy.on) { dx += S.joy.x; dy += S.joy.y; }
   pl.moving = !!(dx || dy);
   if (pl.moving) {
     const l = Math.hypot(dx, dy), sp = 96 * (S.speedT > 0 ? 1.55 : 1) * (S.monkeyOn > 0 ? 0.6 : 1) * wxSpeedMul(dx, dy);
@@ -202,6 +206,7 @@ function update(dt) {
 
 /* ===== Рисование ===== */
 function T(str, x, y, col, size, align) {
+  if (S.touch) str = touchText(str);
   ctx.font = (size || 8) + 'px ' + FONT; ctx.textBaseline = 'top'; ctx.textAlign = align || 'left';
   ctx.fillStyle = '#1b0f33'; ctx.fillText(str, x + 1, y + 1); ctx.fillStyle = col || '#fff'; ctx.fillText(str, x, y);
 }
@@ -286,9 +291,10 @@ function drawHUD() {
   const low = S.time < 10 && Math.floor(S.time * 3) % 2 === 0;
   T('ВРЕМЯ ' + fmtTime(S.time), 8, 5, low ? '#ff6b6b' : '#ffffff');
   T('ОЧКИ ' + S.score, VW / 2, 5, '#ffe14d', 8, 'center');
-  if (S.combo > 1) T('СЕРИЯ x' + (1 + 0.25 * (S.combo - 1)), VW - 8, 5, '#8aff7a', 8, 'right'); else T('РЕКОРД ' + S.best, VW - 8, 5, '#c9b6ff', 8, 'right');
+  const rx = S.touch ? VW - 38 : VW - 8;
+  if (S.combo > 1) T('СЕРИЯ x' + (1 + 0.25 * (S.combo - 1)), rx, 5, '#8aff7a', 8, 'right'); else T('РЕКОРД ' + S.best, rx, 5, '#c9b6ff', 8, 'right');
   drawWeatherChip(112, 5);
-  T('ПРОБЕЛ — ПРАВИЛА', VW - 8, 22, '#c9b6ff', 8, 'right');
+  if (!S.touch) T('ПРОБЕЛ — ПРАВИЛА', VW - 8, 22, '#c9b6ff', 8, 'right');
   const act = [['coffee', S.speedT], ['lens', S.lensT], ['flash', S.safeT], ['x2', S.x2], ['clock', S.clockT]].filter(a => a[1] > 0);
   act.forEach(([n, v], i) => {
     const inf = BONUS_INFO[n], y = 22 + i * 17, fr = inf.dur ? v / inf.dur : v / 2.5;
@@ -298,10 +304,10 @@ function drawHUD() {
     R(ctx, 28, y + 12, 204, 2, '#4b3a66'); R(ctx, 28, y + 12, Math.round(204 * Math.min(1, fr)), 2, inf.col);
   });
   if (S.banner) {
-    const b = S.banner, n = b.lines.length, h = 10 + n * 11, y0 = VH - 8 - h, al = Math.min(1, b.t * 3);
-    ctx.globalAlpha = 0.78 * al; R(ctx, 50, y0, VW - 100, h, '#1b0f33'); ctx.globalAlpha = al;
-    b.lines.forEach((l, i) => T(l.s, VW / 2, y0 + 6 + i * 11, l.col, 8, 'center')); ctx.globalAlpha = 1;
-  } else if (S.hint > 0) {
+    const b = S.banner, n = b.lines.length, h = 10 + n * 11, y0 = VH - 8 - h, al = Math.min(1, b.t * 3), bx = S.touch ? 112 : 50, bw = S.touch ? VW - 124 : VW - 100;
+    ctx.globalAlpha = 0.78 * al; R(ctx, bx, y0, bw, h, '#1b0f33'); ctx.globalAlpha = al;
+    b.lines.forEach((l, i) => T(l.s, bx + bw / 2, y0 + 6 + i * 11, l.col, 8, 'center')); ctx.globalAlpha = 1;
+  } else if (S.hint > 0 && !S.touch) {
     ctx.globalAlpha = Math.min(1, S.hint); T('WASD — БЕГ  ЛКМ — СНИМОК  ПКМ — ФОКУС  ПРОБЕЛ — ПАУЗА', VW / 2, VH - 16, '#ffffff', 8, 'center'); ctx.globalAlpha = 1;
   }
   drawBonusRadar(); drawToast();
@@ -310,7 +316,7 @@ function drawInfoPanels(PY) {
   const PW = 270, PH = 118, LX = 40, RX = 330;
   T('УПРАВЛЕНИЕ', LX + PW / 2, PY - 14, '#ffe14d', 8, 'center'); T('БОНУСЫ В ПАРКЕ', RX + PW / 2, PY - 14, '#ffe14d', 8, 'center');
   ctx.globalAlpha = 0.65; R(ctx, LX, PY, PW, PH, '#1b0f33'); R(ctx, RX, PY, PW, PH, '#1b0f33'); ctx.globalAlpha = 1;
-  const keys = [['WASD / СТРЕЛКИ', 'БЕГ ПО ПАРКУ'], ['МЫШЬ', 'ПРИЦЕЛ-РАМКА'], ['ЛКМ', 'СНИМОК СО ВСПЫШКОЙ'], ['ПКМ (ДЕРЖАТЬ)', 'ФОКУС, БОЛЬШЕ ОЧКОВ'], ['M / N', 'ЗВУК / МУЗЫКА ВКЛ-ВЫКЛ']];
+  const keys = S.touch ? [['ЛЕВЫЙ ПАЛЕЦ', 'БЕГ: ТЯНИ ДЖОЙСТИК'], ['ПРАВЫЙ ПАЛЕЦ', 'РАМКА ЗА ПАЛЬЦЕМ'], ['ДЕРЖИ', 'НАВОДИТСЯ ФОКУС'], ['ОТПУСТИ', 'СНИМОК СО ВСПЫШКОЙ'], ['КНОПКА ?', 'ПАУЗА И ПРАВИЛА']] : [['WASD / СТРЕЛКИ', 'БЕГ ПО ПАРКУ'], ['МЫШЬ', 'ПРИЦЕЛ-РАМКА'], ['ЛКМ', 'СНИМОК СО ВСПЫШКОЙ'], ['ПКМ (ДЕРЖАТЬ)', 'ФОКУС, БОЛЬШЕ ОЧКОВ'], ['M / N', 'ЗВУК / МУЗЫКА ВКЛ-ВЫКЛ']];
   keys.forEach((k, i) => { const y = PY + 6 + i * 22; R(ctx, LX + 6, y, 2, 18, '#ffe14d'); T(k[0], LX + 16, y + 1, '#ffe14d'); T(k[1], LX + 16, y + 11, '#ffffff'); });
   BONUS_TYPES.forEach((n, i) => {
     const inf = BONUS_INFO[n], y = PY + 6 + i * 22; R(ctx, RX + 6, y, 2, 18, inf.col); icon(ctx, inf.ic, RX + 14, y + 1, 2);
@@ -385,7 +391,7 @@ function drawHelp() {
     T('ОТКРЫТО: ' + achCount() + ' ИЗ ' + ACH.length + '. ДОСТИЖЕНИЯ СОХРАНЯЮТСЯ В БРАУЗЕРЕ.', VW / 2, 248, '#8aff7a', 8, 'center');
     T('ИХ ОТКРЫТИЕ ПОКАЖЕТ ПЛАШКА ВО ВРЕМЯ ИГРЫ.', VW / 2, 264, '#c9b6ff', 8, 'center');
   }
-  T('СТРЕЛКИ — ЛИСТАТЬ    ПРОБЕЛ — ' + (S.mode === 'play' ? 'ПРОДОЛЖИТЬ' : 'ЗАКРЫТЬ') + '    ' + (pg + 1) + '/' + HELP_PAGES, VW / 2, 336, '#8aff7a', 8, 'center');
+  T(S.touch ? 'КАСАНИЕ — ДАЛЬШЕ, В КОНЦЕ — ЗАКРЫТЬ    ' + (pg + 1) + '/' + HELP_PAGES : 'СТРЕЛКИ — ЛИСТАТЬ    ПРОБЕЛ — ' + (S.mode === 'play' ? 'ПРОДОЛЖИТЬ' : 'ЗАКРЫТЬ') + '    ' + (pg + 1) + '/' + HELP_PAGES, VW / 2, 336, '#8aff7a', 8, 'center');
 }
 function drawTitle() {
   ctx.fillStyle = 'rgba(38,14,84,0.7)'; ctx.fillRect(0, 0, VW, VH);
@@ -432,6 +438,7 @@ function render() {
       if (S.fr) { ctx.globalAlpha = S.flash * 0.8; ctx.fillStyle = '#ffffff'; disc(ctx, S.fr.sx + S.fr.w / 2, S.fr.sy + S.fr.h / 2, 70, '#ffffff'); } ctx.globalAlpha = 1;
     }
   } else if (S.mode === 'title') drawTitle(); else drawEnd();
+  drawTouch();
   if (S.help) drawHelp();
 }
 
@@ -466,7 +473,8 @@ canvas.addEventListener('contextmenu', e => e.preventDefault());
 /* ===== Размер и цикл ===== */
 function fit() {
   const hint = document.getElementById('hint'), wrap = document.getElementById('wrap');
-  const availW = Math.max(240, wrap.clientWidth), availH = Math.max(160, window.innerHeight - (hint ? hint.offsetHeight : 0) - 56);
+  const coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  const availW = Math.max(240, wrap.clientWidth), availH = Math.max(160, coarse ? window.innerHeight : window.innerHeight - (hint ? hint.offsetHeight : 0) - 56);
   const s = Math.min(availW / VW, availH / VH);
   canvas.style.width = Math.floor(VW * s) + 'px'; canvas.style.height = Math.floor(VH * s) + 'px';
 }
@@ -477,4 +485,5 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   update(dt); render(); requestAnimationFrame(frame);
 }
+initTouch();
 requestAnimationFrame(frame);
