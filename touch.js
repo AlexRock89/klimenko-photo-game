@@ -133,7 +133,7 @@ function drawIntro() {
   ring(c, px, py + 22, 9, '#ffffff', 0.7, '#ffffff', 1);
   if (ph > 0.88) { c.globalAlpha = (ph - 0.88) / 0.12 * 0.8; c.fillStyle = '#ffffff'; c.fillRect(px - 26, py - 18, 52, 36); c.globalAlpha = 1; }
   textLines(['ВЕДИ — РАМКА ЗА ПАЛЬЦЕМ', 'ДЕРЖИ — НАВОДИТСЯ ФОКУС', 'ОТПУСТИ — СНИМОК'], 372, 204);
-  if (Math.floor(t * 2) % 2 === 0) T('КАСАНИЕ — НАЧАТЬ СМЕНУ', VW / 2, 300, '#8aff7a', 8, 'center');
+  if (Math.floor(t * 2) % 2 === 0) T('КАСАНИЕ — НАЧАТЬ СЪЕМКУ', VW / 2, 300, '#8aff7a', 8, 'center');
   T('КНОПКА ? СПРАВА — ПРАВИЛА И ПАУЗА', VW / 2, 320, '#c9b6ff', 8, 'center');
 }
 function drawTouch() {

@@ -327,7 +327,7 @@ const BONUS_INFO = {
   coffee: { ic: 'coffee', col: '#c58a54', msg: 'КОФЕ! БЕЖИМ БЫСТРЕЕ', name: 'КОФЕ', hud: 'БЕГ БЫСТРЕЕ', desc: 'БЕГ БЫСТРЕЕ', dur: 9 },
   lens: { ic: 'lens', col: '#4aa3ff', msg: 'ЛИНЗА! МГНОВЕННЫЙ ФОКУС', name: 'ЛИНЗА', hud: 'МГНОВЕННЫЙ ФОКУС', desc: 'МГНОВЕННЫЙ ФОКУС', dur: 12 },
   flash: { ic: 'flash', col: '#ffe14d', msg: 'МОЩНАЯ ВСПЫШКА! ВСЕ РАЗЛЕТЕЛИСЬ', name: 'ВСПЫШКА', hud: 'ВСПЫШКА ПУГАЕТ ВСЕХ', desc: 'ПУГАЕТ ГОЛУБЕЙ И МАРТЫШКУ', dur: 10 },
-  clock: { ic: 'clock', col: '#ffffff', msg: '+8 СЕКУНД', name: 'ЧАСЫ', hud: '+8 СЕКУНД', desc: '+8 СЕКУНД К СМЕНЕ', dur: 0 },
+  clock: { ic: 'clock', col: '#ffffff', msg: '+8 СЕКУНД', name: 'ЧАСЫ', hud: '+8 СЕКУНД', desc: '+8 СЕКУНД К СЪЕМКЕ', dur: 0 },
   x2: { ic: 'x2', col: '#ffb000', msg: 'ОЧКИ x2 НА 10 СЕК', name: 'ЗВЕЗДА', hud: 'ОЧКИ x2', desc: 'ОЧКИ x2', dur: 10 }
 };
 class Bonus {

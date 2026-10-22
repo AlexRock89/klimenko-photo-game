@@ -130,12 +130,12 @@ function updateStages(dt) {
 const ACH = [
   { id: 'master', name: 'ШЕДЕВР ДНЯ', desc: 'КАДР НА 300+ ОЧКОВ' },
   { id: 'combo', name: 'СЕРИЙНИК', desc: 'СЕРИЯ ДОШЛА ДО x2' },
-  { id: 'everyone', name: 'ВСЕХ ОХВАТИЛА', desc: '8 РАЗНЫХ КЛИЕНТОВ ЗА СМЕНУ' },
+  { id: 'everyone', name: 'ВСЕХ ОХВАТИЛА', desc: '8 РАЗНЫХ КЛИЕНТОВ ЗА СЪЕМКУ' },
   { id: 'pigeon', name: 'ПОРТРЕТ ГОЛУБЯ', desc: 'СНЯТЬ ГОЛУБЯ ВМЕСТО КЛИЕНТА' },
   { id: 'cat', name: 'КОТ-МОДЕЛЬ', desc: 'СДЕЛАТЬ ПОРТРЕТ КОТА' },
-  { id: 'bonus', name: 'ХОЗЯЙКА ПАРКА', desc: 'ПОДОБРАТЬ ВСЕ 5 БОНУСОВ ЗА СМЕНУ' },
+  { id: 'bonus', name: 'ХОЗЯЙКА ПАРКА', desc: 'ПОДОБРАТЬ ВСЕ 5 БОНУСОВ ЗА СЪЕМКУ' },
   { id: 'storm', name: 'НЕ ПОГОДА', desc: 'ШЕДЕВР ПОД ДОЖДЁМ ИЛИ СНЕГОМ' },
-  { id: 'k2', name: 'ЧЕТЫРЕ ТЫСЯЧИ', desc: 'НАБРАТЬ 4000 ОЧКОВ ЗА СМЕНУ' },
+  { id: 'k2', name: 'ЧЕТЫРЕ ТЫСЯЧИ', desc: 'НАБРАТЬ 4000 ОЧКОВ ЗА СЪЕМКУ' },
   { id: 'clean', name: 'ЧИСТАЯ РАБОТА', desc: '12 КАДРОВ И НИ ОДНОЙ МАЗНИ' },
   { id: 'empty', name: 'ФОТО НИ О ЧЁМ', desc: 'СНЯТЬ ПУСТОТУ' }
 ];
@@ -179,7 +179,7 @@ function initRun() {
   S.clients = S.clients.filter(c => !HIDDEN_AT_START.includes(c.id));
   const first = WX_TYPES[Math.floor(Math.random() * WX_TYPES.length)];
   S.wx = null; setWeather(first, true); S.st.wx[first] = 1;
-  toast('СМЕНА НАЧАЛАСЬ: ' + WX_NAME[first], WX_TOAST[first][1], WX_COL[first]);
+  toast('СЪЕМКА НАЧАЛАСЬ: ' + WX_NAME[first], WX_TOAST[first][1], WX_COL[first]);
 }
 /* Табор: первый раз при 400 очках, потом через каждые +500 очков, не больше 3 раз за смену */
 function startCamp() {

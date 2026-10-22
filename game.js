@@ -388,7 +388,7 @@ function drawHelp() {
     T('ПОДСКАЗКИ', 330, 124, '#ffe14d');
     textLines(['ЕСЛИ КАДР СЛАБЕЕ 180, ВНИЗУ', 'ПОЯВИТСЯ СОВЕТ: ЧТО ИМЕННО', 'СНИЗИЛО ОЧКИ И КАК ИСПРАВИТЬ.'], 330, 138);
     T('ЦЕЛЬ', 330, 184, '#ffe14d');
-    textLines(['ЗА ' + SHIFT / 60 + ' МИНУТЫ НАБРАТЬ МАКСИМУМ', 'ОЧКОВ. ЛУЧШИЕ КАДРЫ ПОПАДУТ', 'В ПОРТФОЛИО В КОНЦЕ СМЕНЫ.'], 330, 198);
+    textLines(['ЗА ' + SHIFT / 60 + ' МИНУТЫ НАБРАТЬ МАКСИМУМ', 'ОЧКОВ. ЛУЧШИЕ КАДРЫ ПОПАДУТ', 'В ПОРТФОЛИО В КОНЦЕ СЪЕМКИ.'], 330, 198);
   } else if (pg === 1) {
     const rows = [
       ['ГОЛУБЬ', '#c9d0e0', ['ЛЕТИТ В РАМКУ И САДИТСЯ. -22% ЗА', 'КАЖДОГО В КАДРЕ. ПУГАЕТСЯ ВСПЫШКИ.'], () => pigeon(ctx, 24, 17, { dir: -1, ph: S.tt * 4, peck: Math.sin(S.tt * 5) > 0 })],
@@ -421,7 +421,7 @@ function drawHelp() {
       else for (let k = 0; k < 4; k++) R(ctx, ic + 2 + k * 5, y + 8 + ((S.tt * 8 + k * 6) % 20), 3, 3, '#ffffff');
       T(r[0], 84, y + 4, col); textLines(r[2], 84, y + 17);
     });
-    textLines(['СМЕНА НАЧИНАЕТСЯ СО СЛУЧАЙНОЙ ПОГОДЫ.', 'ДАЛЬШЕ ОНА МЕНЯЕТСЯ КАЖДЫЕ 35-50 СЕКУНД.', 'КАЖДАЯ СМЕНА ИГРАЕТСЯ ПО-РАЗНОМУ.'], 24, 240, '#c9b6ff');
+    textLines(['СЪЕМКА НАЧИНАЕТСЯ СО СЛУЧАЙНОЙ ПОГОДЫ.', 'ДАЛЬШЕ ОНА МЕНЯЕТСЯ КАЖДЫЕ 35-50 СЕКУНД.', 'ПОД КОНЕЦ НАСТУПАЕТ ВЕЧЕР: ТЕМНЕЕ, ГОРЯТ ФОНАРИ,', 'ГОРИТ ЛУНА, У ОКСАНЫ В РУКЕ ФОНАРИК.'], 24, 232, '#c9b6ff');
   } else if (pg === 3) {
     drawInfoPanels(62);
     T('ПРОБЕЛ — ПАУЗА И ПРАВИЛА В ЛЮБОЙ МОМЕНТ.', VW / 2, 206, '#ffffff', 8, 'center');
@@ -448,14 +448,14 @@ function drawTitle() {
   drawOksana(ctx, 62 / 2, (346 + bob) / 2, { dir: 1, ph: 0, moving: false, flash: Math.sin(S.tt * 1.7) > 0.93, spark: Math.max(0, 1 - (S.tt % 3.4) * 2.6) }); ctx.restore();
   ctx.save(); ctx.scale(2, 2); pigeon(ctx, 584 / 2, 342 / 2, { dir: -1, ph: S.tt * 4, peck: Math.sin(S.tt * 5) > 0 }); ctx.restore();
   drawInfoPanels(120);
-  if (Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — НАЧАТЬ СМЕНУ', VW / 2, 250, '#8aff7a', 8, 'center');
+  if (Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — НАЧАТЬ СЪЕМКУ', VW / 2, 250, '#8aff7a', 8, 'center');
   T('ПРОБЕЛ — ПРАВИЛА ИГРЫ', VW / 2, 270, '#ffd23f', 8, 'center');
-  T('РЕКОРД: ' + S.best + '    СМЕНА — 3 МИНУТЫ', VW / 2, 292, '#c9b6ff', 8, 'center');
+  T('РЕКОРД: ' + S.best + '    СЪЕМКА — 3 МИНУТЫ', VW / 2, 292, '#c9b6ff', 8, 'center');
   T('ДОСТИЖЕНИЯ: ' + achCount() + ' ИЗ ' + ACH.length, VW / 2, 310, '#ffd23f', 8, 'center');
 }
 function drawEnd() {
   ctx.fillStyle = 'rgba(38,14,84,0.8)'; ctx.fillRect(0, 0, VW, VH);
-  T('СМЕНА ОКОНЧЕНА', VW / 2, 10, '#ffe14d', 16, 'center'); T('ОЧКИ: ' + S.score, VW / 2, 32, '#ffffff', 16, 'center');
+  T('СЪЕМКА ОКОНЧЕНА', VW / 2, 10, '#ffe14d', 16, 'center'); T('ОЧКИ: ' + S.score, VW / 2, 32, '#ffffff', 16, 'center');
   T(S.rank + (S.newBest ? '  НОВЫЙ РЕКОРД!' : ''), VW / 2, 54, S.newBest ? '#8aff7a' : '#c9b6ff', 8, 'center');
   ctx.imageSmoothingEnabled = false;
   if (!S.top.length) T('ПОРТФОЛИО ПУСТОЕ. ГОЛУБИ ПОБЕДИЛИ.', VW / 2, 170, '#ff9a9a', 8, 'center');
@@ -470,7 +470,7 @@ function drawEnd() {
   });
   T('ДОСТИЖЕНИЯ: ' + achCount() + ' ИЗ ' + ACH.length, VW / 2, 297, '#ffd23f', 8, 'center');
   if (S.newAch.length) T('НОВОЕ: ' + S.newAch.map(id => ACH.find(a => a.id === id).name).join(', '), VW / 2, 312, '#8aff7a', 8, 'center');
-  if (S.endT > 1.2 && Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — ЕЩЁ СМЕНА', VW / 2, 338, '#8aff7a', 8, 'center');
+  if (S.endT > 1.2 && Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — ЕЩЁ СЪЕМКА', VW / 2, 338, '#8aff7a', 8, 'center');
   T('РЕКОРД: ' + S.best, 8, 338, '#ffe14d');
 }
 /* ===== Вечер: тёмный слой с вырезами света от фонарей и фонарика Оксаны, лунное свечение ===== */
