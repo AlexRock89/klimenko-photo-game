@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Обычный день фотографа</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500&display=swap">
+<style>
+  /* Схема: одна сцена по центру, вокруг глубокий фиолетовый, подпись с управлением под полотном */
+  :root {
+    --bg: #1b0f33;
+    --panel: #2a1654;
+    --fg: #f4ecff;
+    --muted: #b7a4e0;
+    --accent: #ffe14d;
+    --pink: #ff3d7f;
+    --display: "Press Start 2P", monospace;
+    --body: "Rubik", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg); font-family: var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 12px;
+    box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  #wrap { width: 100%; max-width: 1400px; display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0; }
+  canvas {
+    display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: none; max-width: 100%;
+    border: 4px solid var(--pink); border-radius: 4px; box-shadow: 6px 6px 0 var(--panel); background: #5fd873; touch-action: none;
+  }
+  #hint { margin: 0; font-size: 13px; line-height: 1.4; color: var(--muted); text-align: center; text-wrap: balance; }
+  #hint b { color: var(--accent); font-weight: 500; }
+  @media (prefers-reduced-motion: reduce) { canvas { image-rendering: pixelated; } }
+</style>
+<main id="wrap">
+  <canvas id="game" width="640" height="360" aria-label="Игра: фотограф Оксана снимает клиентов в парке"></canvas>
+  <p id="hint"><b>WASD</b> или стрелки — бег · мышь — прицел · <b>ЛКМ</b> — снимок · <b>ПКМ</b> — фокус · <b>M</b> — звук · <b>N</b> — музыка · <b>Пробел</b> — пауза и правила. Играть с компьютера.</p>
+</main>
+<script src="art-people.js"></script>
+<script src="art-world.js"></script>
+<script src="actors.js"></script>
+<script src="sound.js"></script>
+<script src="systems.js"></script>
+<script src="game.js"></script>
+
+</body></html>
