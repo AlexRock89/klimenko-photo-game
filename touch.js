@@ -48,14 +48,27 @@ function touchUp(id, p, cancel) {
     if (!cancel && S.mode === 'play' && !S.help && S.intro <= 0) { S.mx = p.x; S.my = p.y - TZ.aimLift; S.shotReq = true; }
   }
 }
+/* Во весь экран: прячет адресную строку (Android). На iPhone такой возможности у браузера нет */
+let FS_TRIES = 0;
+function goFullscreen() {
+  if (!S.touch || FS_TRIES > 3) return;
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  const el = document.documentElement, rq = el.requestFullscreen || el.webkitRequestFullscreen; if (!rq) return;
+  FS_TRIES++;
+  try {
+    const r = rq.call(el, { navigationUI: 'hide' });
+    if (r && r.then) r.then(() => { try { screen.orientation.lock('landscape').catch(() => { }); } catch (e) { } setTimeout(fit, 250); }).catch(() => { });
+  } catch (e) { }
+}
 function initTouch() {
   try { if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) S.touch = true; } catch (e) { }
   const opt = { passive: false };
   canvas.addEventListener('touchstart', e => { e.preventDefault(); S.touch = true; actx(); for (const t of e.changedTouches) touchDown(t.identifier, touchPos(t)); }, opt);
   canvas.addEventListener('touchmove', e => { e.preventDefault(); for (const t of e.changedTouches) touchMove(t.identifier, touchPos(t)); }, opt);
-  canvas.addEventListener('touchend', e => { e.preventDefault(); actx(); for (const t of e.changedTouches) touchUp(t.identifier, touchPos(t), false); }, opt);
+  canvas.addEventListener('touchend', e => { e.preventDefault(); actx(); goFullscreen(); for (const t of e.changedTouches) touchUp(t.identifier, touchPos(t), false); }, opt);
   canvas.addEventListener('touchcancel', e => { e.preventDefault(); for (const t of e.changedTouches) touchUp(t.identifier, touchPos(t), true); }, opt);
   window.addEventListener('orientationchange', () => { setTimeout(fit, 150); });
+  document.addEventListener('fullscreenchange', () => { setTimeout(fit, 250); });
 }
 
 /* ---------- Рисование ---------- */
