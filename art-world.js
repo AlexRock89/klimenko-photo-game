@@ -63,7 +63,7 @@ function drawFountain(c, x, y, t) {
   }
   R(c, x - 4, y - 12, 8, 14, '#f7e8d8'); R(c, x - 4, y - 12, 2, 14, '#e2cdb8'); ell(c, x, y - 13, 11, 5, '#f7e8d8'); ell(c, x, y - 13, 8, 3, '#4cc2ff');
   for (let i = 0; i < 8; i++) { const ph = (t * 1.4 + i / 8) % 1, h = Math.sin(ph * Math.PI) * 24, dx = (i - 3.5) * 3 * ph; R(c, x + dx, y - 16 - h, 2, 2, '#d6f3ff'); }
-  const dx = x + Math.cos(t * 0.6) * 28, dy = y + 6 + Math.sin(t * 0.6) * 12;
+  const dx = x + Math.cos(t * 0.6) * 28, dy = y + 6 + Math.sin(t * 0.6) * 12 - (DUCK.q > 0 ? Math.abs(Math.round(Math.sin(t * 28) * 3)) : 0);
   ell(c, dx, dy, 5, 3, '#ffd93d'); disc(c, dx + 4, dy - 3, 2, '#ffd93d'); R(c, dx + 6, dy - 3, 2, 1, '#ff8a1f'); R(c, dx + 4, dy - 4, 1, 1, '#222');
 }
 function drawTruck(c, x, y, t) {
@@ -84,8 +84,9 @@ function drawTrampoline(c, x, y, dip) {
   for (let k = 0; k < 14; k++) { const a = k / 14 * 6.283; R(c, x + Math.cos(a) * 20, y + Math.sin(a) * 12.5, 2, 2, '#ffd23f'); }
   R(c, x - 8, y - 1, 16, 1, '#3b4fa8'); R(c, x - 1, y - 7, 1, 14, '#3b4fa8');
 }
-function drawDino(c, x, y, t) {
-  const w = Math.round(Math.sin(t * 2.2) * 1);
+function drawDino(c, x, y, t, roar) {
+  const w = Math.round(Math.sin(t * 2.2) * 1) + (roar > 0 ? -Math.abs(Math.round(Math.sin(t * 30) * 2)) : 0);
+  if (roar > 0) { x += Math.round(Math.sin(t * 45) * 1.5); for (let i = 0; i < 3; i++) { const ph = (roar * 2 + i / 3) % 1; c.globalAlpha = ph; R(c, x + 30 + (1 - ph) * 12 + i * 3, y - 30 + w - i * 3, 2, 3 + i, '#fff'); } c.globalAlpha = 1; }
   shadow(c, x, y, 26);
   ell(c, x - 21, y - 9, 8, 5, '#3fc874'); R(c, x - 31, y - 11, 5, 4, '#3fc874');
   ell(c, x, y - 16 + w, 20, 15, '#58e08b'); ell(c, x + 2, y - 10 + w, 13, 8, '#b9f5cf');

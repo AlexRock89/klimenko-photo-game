@@ -2,7 +2,7 @@
 /* ===== Состояние ===== */
 const S = {
   mode: 'title', t: 0, tt: 0, time: SHIFT, score: 0, combo: 0, best: 0, x2: 0, speedT: 0, lensT: 0, safeT: 0, clockT: 0,
-  shots: [], texts: [], flash: 0, cd: 0, focus: 0, rmb: false, mx: VW / 2, my: VH / 2, keys: {},
+  shots: [], texts: [], flash: 0, spark: 0, cd: 0, focus: 0, rmb: false, mx: VW / 2, my: VH / 2, keys: {},
   cam: { x: 440, y: 300 }, pl: { x: 640, y: 470, ph: 0, moving: false, dir: 1 }, endT: 0, bonuses: [], bonusT: 4,
   pending: null, monkeyOn: 0, fr: null, aimOnClient: false, clients: [], pigeons: [], cat: null, monkey: null,
   shotReq: false, mute: false, noMusic: false, banner: null, hint: 0, top: [], rank: '', newBest: false, help: false, helpPage: 0, alert: null,
@@ -29,7 +29,7 @@ LAMPS.forEach(([x, y]) => STATIC.push({ x, y, draw: (c, t) => drawLamp(c, x, y, 
 STATIC.push({ x: 640, y: 366, draw: (c, t) => drawFountain(c, 640, 356, t) });
 STATIC.push({ x: 920, y: 132, draw: (c, t) => drawTruck(c, 920, 132, t) });
 STATIC.push({ x: 230, y: 190, draw: (c, t) => drawTrampoline(c, 230, 206, S.clients[0] && S.clients[0].dip) });
-STATIC.push({ x: 140, y: 560, draw: (c, t) => drawDino(c, 140, 560, t) });
+STATIC.push({ x: 140, y: 560, draw: (c, t) => drawDino(c, 140, 560, t, DINO.roar) });
 STATIC.push({ x: 1120, y: 296, draw: (c) => drawBenchBack(c, 1120, 298) });
 STATIC.push({ x: 1120, y: 299.5, draw: (c) => drawBenchFront(c, 1120, 298) });
 STATIC.push({ x: 330, y: 540, draw: (c, t) => drawStage(c, 330, 566, t) });
@@ -41,7 +41,7 @@ function buildWorld() {
   S.cat = new CatB(700, 300); S.monkey = new MonkeyB(760, 250); S.bonuses = []; S.pests = []; S.hiddenClients = [];
 }
 function addText(x, y, text, col, big) { S.texts.push({ x, y, text, col: col || '#fff', t: 0, big: !!big }); }
-function scareAll(cx, cy, rad) { for (const p of S.pigeons) p.scare(cx, cy, rad); for (const p of S.pests) p.scare(cx, cy, rad); S.cat.scare(cx, cy, rad); S.monkey.scare(cx, cy, rad); }
+function scareAll(cx, cy, rad) { const cp = S.clients.find(c => c.id === 'couple'); if (cp && dist(cp.dx, cp.dy, cx, cy) < rad) sfx('bark', cp.dx, cp.dy, 9999); for (const p of S.pigeons) p.scare(cx, cy, rad); for (const p of S.pests) p.scare(cx, cy, rad); S.cat.scare(cx, cy, rad); S.monkey.scare(cx, cy, rad); }
 
 function startGame() {
   Object.assign(S, { mode: 'play', t: 0, time: SHIFT, score: 0, combo: 0, x2: 0, speedT: 0, lensT: 0, safeT: 0, clockT: 0, shots: [], texts: [], flash: 0, cd: 0, focus: 0, monkeyOn: 0, bonusT: 4, banner: null, hint: 8, pending: null, shotReq: false, newBest: false, help: false, helpPage: 0, alert: null });
@@ -81,12 +81,15 @@ function takeShot() {
   let pg = 0; for (const p of S.pigeons) if (inside(p.x, p.y - p.z - 3, f)) pg++;
   let ps = 0; for (const p of S.pests) if (inside(p.x, p.y - (p.kind === 'dog' ? 6 : 16), f)) ps++;
   const ct = inside(S.cat.x, S.cat.y - 6, f) ? 1 : 0, mk = S.monkeyOn > 0, notes = [];
+  const dp = duckPos(), dinoIn = inside(142, 544, f), duckIn = inside(dp.x, dp.y - 3, f);
   let pen = Math.max(0.1, 1 - 0.22 * pg - 0.25 * ct - 0.25 * ps); if (mk) pen *= 0.2;
   raw *= pen;
   let cap = '', who = '';
   if (top) { cap = top.cl.capFor(top.m); who = top.cl.name; }
   else if (pg) { raw = 10 * pg; cap = 'Портрет голубя. Красавец!'; who = 'Голубь'; }
   else if (ct) { raw = 30; cap = 'Кот-модель в кадре'; who = 'Кот'; }
+  else if (dinoIn) { raw = 60; cap = 'Динозавр в кадре. Рррр!'; who = 'Динозавр'; }
+  else if (duckIn) { raw = 40; cap = 'Утка в фонтане. Кря!'; who = 'Утка'; }
   else cap = 'Пусто. Там никого нет';
   if (top) {
     if (pg) notes.push('ГОЛУБЬ ВЛЕЗ В КАДР!'); if (ct) notes.push('КОТ ПОРТИТ ВИД!');
@@ -112,7 +115,9 @@ function takeShot() {
   S.banner = { t: hint ? 4.5 : 3, lines };
   const entry = { score: pts, cap, who: who || '—', focus: S.focus, sx: f.sx, sy: f.sy, w: f.w, h: f.h, img: null };
   S.pending = entry; if (pts > 0) S.shots.push(entry);
-  S.flash = 1; S.cd = 0.45; shutter();
+  S.flash = 1; S.spark = 1; S.cd = 0.45; shutter();
+  if (dinoIn) { DINO.roar = 1.3; addText(140, 500, 'РРРРР!', '#8aff7a', true); setTimeout(() => sfx('roar', 140, 560, 9999), 260); }
+  if (duckIn) { DUCK.q = 0.7; addText(dp.x, dp.y - 26, 'КРЯ!', '#ffe14d', true); setTimeout(() => sfx('quack', dp.x, dp.y, 9999), 260); }
   scareAll(f.cx, f.cy, f.w * 1.1 + 40); S.monkey.release();
   if (pts >= 180) { beep(880, 0.1, 'square', 0.05); beep(1320, 0.15, 'square', 0.05, 0, 0.09); }
   else if (pts === 0) beep(140, 0.2, 'sawtooth', 0.05, 80);
@@ -122,7 +127,7 @@ function takeShot() {
   if (Object.keys(S.st.uniq).length >= 8) unlock('everyone');
   if (pts >= 300) { unlock('master'); if (S.wx && (S.wx.type === 'rain' || S.wx.type === 'snow')) unlock('storm'); }
   if (S.combo >= 5) unlock('combo');
-  if (!top) { if (pg) unlock('pigeon'); else if (ct) unlock('cat'); else unlock('empty'); }
+  if (!top) { if (pg) unlock('pigeon'); else if (ct) unlock('cat'); else if (!dinoIn && !duckIn) unlock('empty'); }
 }
 function announceBonus(b) {
   const sx = b.x - S.cam.x, sy = b.y - S.cam.y - 18, on = sx > 6 && sx < VW - 6 && sy > 26 && sy < VH - 6;
@@ -138,7 +143,19 @@ function applyBonus(b) {
 }
 
 /* ===== Обновление ===== */
+const DINO = { roar: 0 }, DUCK = { q: 0 };
+const duckPos = () => ({ x: 640 + Math.cos(S.tt * 0.6) * 28, y: 362 + Math.sin(S.tt * 0.6) * 12 });
+const IDLE_VOICE = { clown: ['laugh', 3.6], fashion: ['camflash', 4.6], hipster: ['hello', 6], barista: ['cook', 3.4], grandpa: ['snore', 3.4, c => !c.awake], family: ['kids', 3.8], couple: ['kiss', 5.5], wedding: ['fanfare', 11], busker: ['guitar', 4], jogger: ['cheer', 6.5] };
+function idleVoices(dt) {
+  if (S.mode !== 'play') return;
+  for (const c of S.clients) {
+    const v = IDLE_VOICE[c.id]; if (!v) continue;
+    c._vt = (c._vt === undefined ? rnd(0, v[1]) : c._vt) - dt; if (c._vt > 0) continue;
+    if (dist(c.x, c.y, S.pl.x, S.pl.y) < (c.id === 'jogger' || c.id === 'wedding' ? 280 : 210) && (!v[2] || v[2](c))) { sfx(v[0], c.x, c.y); c._vt = v[1] * rnd(0.85, 1.3); } else c._vt = 0.4;
+  }
+}
 function updateEntities(dt) {
+  idleVoices(dt);
   for (const c of S.clients) c.upd(dt);
   for (const p of S.pigeons) p.upd(dt);
   for (const p of S.pests) p.upd(dt);
@@ -156,7 +173,7 @@ function update(dt) {
   }
   S.t += dt; S.time -= dt; if (S.hint > 0) S.hint -= dt; updateSystems(dt);
   S.speedT = Math.max(0, S.speedT - dt); S.lensT = Math.max(0, S.lensT - dt); S.safeT = Math.max(0, S.safeT - dt); S.x2 = Math.max(0, S.x2 - dt); S.clockT = Math.max(0, S.clockT - dt); if (S.alert) { S.alert.t -= dt; if (S.alert.t <= 0) S.alert = null; }
-  S.flash = Math.max(0, S.flash - dt * 5); S.cd = Math.max(0, S.cd - dt); if (S.banner) { S.banner.t -= dt; if (S.banner.t <= 0) S.banner = null; }
+  S.flash = Math.max(0, S.flash - dt * 5); S.spark = Math.max(0, S.spark - dt * 2.6); DINO.roar = Math.max(0, DINO.roar - dt); DUCK.q = Math.max(0, DUCK.q - dt); S.cd = Math.max(0, S.cd - dt); if (S.banner) { S.banner.t -= dt; if (S.banner.t <= 0) S.banner = null; }
   // движение
   const k = S.keys, pl = S.pl;
   let dx = (k.KeyD || k.ArrowRight ? 1 : 0) - (k.KeyA || k.ArrowLeft ? 1 : 0), dy = (k.KeyS || k.ArrowDown ? 1 : 0) - (k.KeyW || k.ArrowUp ? 1 : 0);
@@ -220,7 +237,7 @@ function renderWorld(t) {
   for (const p of S.pests) if (vis(p)) items.push({ y: p.y, d: cc => p.draw(cc) });
   if (vis(S.cat)) items.push({ y: S.cat.y, d: cc => S.cat.draw(cc) });
   if (vis(S.monkey)) items.push({ y: S.monkey.y + 1, d: cc => S.monkey.draw(cc) });
-  items.push({ y: S.pl.y, d: cc => { shadow(cc, S.pl.x, S.pl.y, 9); drawOksana(cc, S.pl.x, S.pl.y, { dir: S.pl.dir, ph: S.pl.ph, moving: S.pl.moving, flash: S.flash > 0.5 }); } });
+  items.push({ y: S.pl.y, d: cc => { shadow(cc, S.pl.x, S.pl.y, 9); drawOksana(cc, S.pl.x, S.pl.y, { dir: S.pl.dir, ph: S.pl.ph, moving: S.pl.moving, flash: S.flash > 0.5, spark: S.spark }); } });
   items.sort((a, b) => a.y - b.y);
   for (const it of items) it.d(ctx, t);
   for (const b of S.bonuses) b.draw(ctx);
@@ -399,7 +416,7 @@ function drawTitle() {
   T('ФОТОГРАФА', VW / 2 + 4, 42 + 4, '#ff3d7f', 40, 'center'); T('ФОТОГРАФА', VW / 2, 42, '#ffffff', 40, 'center');
   T('ГЛАВНАЯ РОЛЬ — ОКСАНА КЛИМЕНКО', VW / 2, 92, '#c9b6ff', 8, 'center');
   ctx.save(); ctx.scale(2, 2); const bob = Math.round(Math.sin(S.tt * 3));
-  drawOksana(ctx, 62 / 2, (346 + bob) / 2, { dir: 1, ph: 0, moving: false, flash: Math.sin(S.tt * 1.7) > 0.93 }); ctx.restore();
+  drawOksana(ctx, 62 / 2, (346 + bob) / 2, { dir: 1, ph: 0, moving: false, flash: Math.sin(S.tt * 1.7) > 0.93, spark: Math.max(0, 1 - (S.tt % 3.4) * 2.6) }); ctx.restore();
   ctx.save(); ctx.scale(2, 2); pigeon(ctx, 584 / 2, 342 / 2, { dir: -1, ph: S.tt * 4, peck: Math.sin(S.tt * 5) > 0 }); ctx.restore();
   drawInfoPanels(120);
   if (Math.floor(S.tt * 2) % 2 === 0) T('КЛИК ИЛИ ENTER — НАЧАТЬ СМЕНУ', VW / 2, 250, '#8aff7a', 8, 'center');

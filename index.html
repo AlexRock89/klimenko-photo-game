@@ -1,13 +1,5 @@
-<!doctype html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#1b0f33">
 <title>Обычный день фотографа</title>
+<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rubik:wght@400;500&display=swap">
 <style>
   /* Схема: одна сцена по центру, вокруг глубокий фиолетовый, подпись с управлением под полотном */
@@ -51,19 +43,15 @@
   }
   @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } #wrap { visibility: hidden; } }
 </style>
-</head>
-<body>
 <div id="rotate" aria-hidden="true"><div class="ph"></div><b>ПОВЕРНИ ТЕЛЕФОН</b><span>Игра работает в горизонтальном положении</span></div>
 <main id="wrap">
   <canvas id="game" width="640" height="360" aria-label="Игра: фотограф Оксана снимает клиентов в парке"></canvas>
   <p id="hint"><b>WASD</b> или стрелки — бег · мышь — прицел · <b>ЛКМ</b> — снимок · <b>ПКМ</b> — фокус · <b>M</b> — звук · <b>N</b> — музыка · <b>Пробел</b> — пауза и правила. Играть с компьютера.</p>
 </main>
-<script src="art-people.js?v=202610221711"></script>
-<script src="art-world.js?v=202610221711"></script>
-<script src="actors.js?v=202610221711"></script>
-<script src="sound.js?v=202610221711"></script>
-<script src="systems.js?v=202610221711"></script>
-<script src="touch.js?v=202610221711"></script>
-<script src="game.js?v=202610221711"></script>
-</body>
-</html>
+<script src="art-people.js"></script>
+<script src="art-world.js"></script>
+<script src="actors.js"></script>
+<script src="sound.js"></script>
+<script src="systems.js"></script>
+<script src="touch.js"></script>
+<script src="game.js"></script>

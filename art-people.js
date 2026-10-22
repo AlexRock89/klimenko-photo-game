@@ -155,7 +155,17 @@ function drawOksana(c, x, y, o) {
   R(c, cx - 4, cy - 1, 9, 6, '#26262e'); R(c, cx - 4, cy - 2, 9, 1, '#b9bcc8'); R(c, cx - 4, cy + 1, 9, 1, '#3a3a45');
   disc(c, cx, cy + 2, 2, '#2e5f94'); R(c, cx - 1, cy + 1, 1, 1, '#ffffff');
   R(c, cx + 3, cy - 3, 2, 1, '#ff4d6d');
-  if (o.flash) { icon(c, 'star', cx - 2, cy - 8, 1); R(c, cx - 6, cy - 6, 2, 2, '#fff'); R(c, cx + 5, cy - 7, 2, 2, '#fff7a8'); }
+  if (o.spark > 0.02) {
+    const k = 1 - o.spark, s = Math.sin(Math.min(1, k * 1.15) * Math.PI), L = Math.round(2 + 8 * s), D = Math.round(1 + 4 * s), sx = cx, sy = cy + 1;
+    c.globalAlpha = Math.min(1, o.spark * 1.6) * 0.45; disc(c, sx, sy, 4 + 6 * s, '#fff3a0');
+    c.globalAlpha = Math.min(1, o.spark * 2.2);
+    R(c, sx - L, sy, 2 * L + 1, 1, '#ffffff'); R(c, sx, sy - L, 1, 2 * L + 1, '#ffffff');
+    for (let i = 1; i <= D; i++) { const q = i > D - 1 ? '#fff7a8' : '#ffffff'; R(c, sx - i, sy - i, 1, 1, q); R(c, sx + i, sy - i, 1, 1, q); R(c, sx - i, sy + i, 1, 1, q); R(c, sx + i, sy + i, 1, 1, q); }
+    R(c, sx - 1, sy - 1, 3, 3, '#ffffff');
+    if (k > 0.15) { R(c, sx - 8, sy - 6, 2, 2, '#fff7a8'); }
+    if (k > 0.3) R(c, sx + 7, sy - 8, 2, 2, '#fff'); 
+    c.globalAlpha = 1;
+  }
 }
 
 /* ===== Животные ===== */

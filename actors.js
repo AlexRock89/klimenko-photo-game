@@ -27,7 +27,7 @@ class Clown extends Client {
 
 class Fashion extends Client {
   constructor() { super('fashion', 'Модница', 490, 178, 16, 32, 120); this.pose = 0; this.good = 'Поза, как с обложки!'; this.bad = 'Модница не в образе'; }
-  upd(dt) { super.upd(dt); const p = Math.floor(this.t / 2) % 4; if (p === 2 && this.pose !== 2) sfx('chime', this.x, this.y); this.pose = p; }
+  upd(dt) { super.upd(dt); const p = Math.floor(this.t / 2) % 4; if (p === 2 && this.pose !== 2) sfx('camflash', this.x, this.y); this.pose = p; }
   moment() { return { q: [0.3, 0.7, 1, 0.2][this.pose] }; }
   draw(c, t) {
     const x = this.x, y = this.y, p = this.pose;
@@ -40,7 +40,7 @@ class Fashion extends Client {
 
 class Hipster extends Client {
   constructor() { super('hipster', 'Хипстер', 866, 184, 20, 34, 120); this.phase = 0; this.good = 'Кофе в кадре, хипстер счастлив!'; this.bad = 'Хипстер просто пьёт кофе'; }
-  upd(dt) { super.upd(dt); const T = this.t % 4, p = T < 2.2 ? 0 : (T < 3.5 ? 1 : 2); if (p === 1 && this.phase !== 1) sfx('click', this.x, this.y); this.phase = p; }
+  upd(dt) { super.upd(dt); const T = this.t % 4, p = T < 2.2 ? 0 : (T < 3.5 ? 1 : 2); if (p === 1 && this.phase !== 1) { sfx('click', this.x, this.y); sfx('hello', this.x, this.y); } this.phase = p; }
   box() { const h = this.phase === 1 ? 40 : 32; return { x: this.x - 9, y: this.y - h, w: 20, h: h }; }
   moment() { return { q: this.phase === 1 ? 1 : 0.4 }; }
   draw(c, t) {
@@ -122,7 +122,7 @@ class CoupleDog extends Client {
   upd(dt) {
     super.upd(dt); const a = this.t * 0.12;
     this.x = 700 + 210 * Math.sin(a); this.y = 632; this.dv = Math.cos(a) >= 0 ? 1 : -1;
-    const k = (this.t % 6) > 4.6; if (k && !this.kiss) sfx('smack', this.x, this.y); this.kiss = k;
+    const k = (this.t % 6) > 4.6; if (k && !this.kiss) sfx('kiss', this.x, this.y); this.kiss = k;
     this.dx = this.x + this.dv * 40 + Math.sin(this.t * 3) * 5; this.dy = 636 + Math.sin(this.t * 2.3) * 3;
   }
   members() { return [{ x: this.x - 16, y: this.y - 26, w: 14, h: 26 }, { x: this.x + 2, y: this.y - 26, w: 14, h: 26 }]; }
@@ -144,7 +144,7 @@ class Wedding extends Client {
   upd(dt) {
     super.upd(dt); const T = this.t % 9;
     this.off = T < 5.5 ? 0 : T < 6.5 ? (T - 5.5) * 110 : T < 8 ? 110 : (9 - T) * 110;
-    const r = (T >= 5.5 && T < 6.5) || T >= 8, k = T > 4 && T < 5.5; if (r && !this.run && T < 7) sfx('oops', this.x, this.y); if (k && !this.kiss) sfx('smack', this.x, this.y); this.run = r; this.kiss = k;
+    const r = (T >= 5.5 && T < 6.5) || T >= 8, k = T > 4 && T < 5.5; if (r && !this.run && T < 7) sfx('oops', this.x, this.y); if (k && !this.kiss) sfx('fanfare', this.x, this.y); this.run = r; this.kiss = k;
   }
   members() { return [{ x: 1050 - 8, y: 578 - 28, w: 16, h: 28 }, { x: 1074 + this.off - 7, y: 578 - 26, w: 14, h: 26 }]; }
   moment() { return { q: this.off > 20 ? 0.15 : this.kiss ? 1 : 0.65 }; }
@@ -228,7 +228,7 @@ class PigeonB {
   scare(cx, cy, rad) {
     if (this.st === 'scatter' || dist(this.x, this.y, cx, cy) > rad) return;
     const a = Math.atan2(this.y - cy, this.x - cx) + rnd(-0.6, 0.6), r = rnd(200, 320);
-    this.tx = clamp(this.x + Math.cos(a) * r, 40, WW - 40); this.ty = clamp(this.y + Math.sin(a) * r, 70, WH - 30); this.st = 'scatter'; sfx('flutter', this.x, this.y);
+    this.tx = clamp(this.x + Math.cos(a) * r, 40, WW - 40); this.ty = clamp(this.y + Math.sin(a) * r, 70, WH - 30); this.st = 'scatter'; sfx('coo2', this.x, this.y);
   }
   draw(c) { shadow(c, this.x, this.y, 4); pigeon(c, this.x, this.y - this.z, { dir: this.dir, ph: this.ph, fly: this.st === 'fly' || this.st === 'scatter', peck: this.peck && this.st === 'peck' }); }
 }
@@ -277,7 +277,7 @@ class MonkeyB {
     } else if (this.st === 'flee') { if (this.mv(this.tx, this.ty, 110, dt) < 4) { this.st = 'idle'; this.timer = rnd(14, 22) / (S.diff || 1); } }
   }
   release() { if (this.st === 'latch') { S.monkeyOn = 0; this.flee(S.pl.x, S.pl.y); } }
-  scare(cx, cy, rad) { if (this.st === 'latch') { if (dist(S.pl.x, S.pl.y, cx, cy) < rad) this.release(); } else if (dist(this.x, this.y, cx, cy) < rad) this.flee(cx, cy); }
+  scare(cx, cy, rad) { if (this.st === 'latch') { if (dist(S.pl.x, S.pl.y, cx, cy) < rad) { sfx('monkey', this.x, this.y, 9999); this.release(); } } else if (dist(this.x, this.y, cx, cy) < rad) { sfx('monkey', this.x, this.y, 9999); this.flee(cx, cy); } }
   draw(c) {
     if (this.st === 'latch') { monkey(c, this.x, this.y - 22, { dir: this.dir, ph: this.ph, moving: false }); return; }
     shadow(c, this.x, this.y, 6); monkey(c, this.x, this.y, { dir: this.dir, ph: this.ph, moving: this.moving });
