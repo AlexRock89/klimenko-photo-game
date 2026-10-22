@@ -282,8 +282,8 @@ function drawBonusRadar() {
   }
   if (S.alert) {
     const a = S.alert, inf = BONUS_INFO[a.type], al = Math.min(1, a.t * 2);
-    ctx.globalAlpha = al * 0.88; R(ctx, VW - 246, 34, 238, 30, '#1b0f33'); ctx.globalAlpha = al; R(ctx, VW - 246, 34, 2, 30, inf.col);
-    icon(ctx, inf.ic, VW - 238, 40, 2); T('НОВЫЙ БОНУС: ' + inf.name, VW - 208, 38, inf.col === '#ffffff' ? '#ffffff' : inf.col); T(a.on ? 'ОН РЯДОМ, ЛОВИ!' : 'СЛЕДУЙ ЗА СТРЕЛКОЙ!', VW - 208, 50, '#ffffff'); ctx.globalAlpha = 1;
+    ctx.globalAlpha = al * 0.88; const ax = VW - 246 - (S.touch ? 46 : 0); R(ctx, ax, 34, 238, 30, '#1b0f33'); ctx.globalAlpha = al; R(ctx, ax, 34, 2, 30, inf.col);
+    icon(ctx, inf.ic, ax + 8, 40, 2); T('НОВЫЙ БОНУС: ' + inf.name, ax + 38, 38, inf.col === '#ffffff' ? '#ffffff' : inf.col); T(a.on ? 'ОН РЯДОМ, ЛОВИ!' : 'СЛЕДУЙ ЗА СТРЕЛКОЙ!', ax + 38, 50, '#ffffff'); ctx.globalAlpha = 1;
   }
 }
 function drawHUD() {
@@ -291,7 +291,7 @@ function drawHUD() {
   const low = S.time < 10 && Math.floor(S.time * 3) % 2 === 0;
   T('ВРЕМЯ ' + fmtTime(S.time), 8, 5, low ? '#ff6b6b' : '#ffffff');
   T('ОЧКИ ' + S.score, VW / 2, 5, '#ffe14d', 8, 'center');
-  const rx = S.touch ? VW - 38 : VW - 8;
+  const rx = VW - 8;
   if (S.combo > 1) T('СЕРИЯ x' + (1 + 0.25 * (S.combo - 1)), rx, 5, '#8aff7a', 8, 'right'); else T('РЕКОРД ' + S.best, rx, 5, '#c9b6ff', 8, 'right');
   drawWeatherChip(112, 5);
   if (!S.touch) T('ПРОБЕЛ — ПРАВИЛА', VW - 8, 22, '#c9b6ff', 8, 'right');

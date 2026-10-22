@@ -19,7 +19,9 @@ function startTouchIntro() {
   let seen = false; try { seen = localStorage.getItem('oksana-touch') === '1'; } catch (e) { }
   if (!seen) { S.intro = 8; try { localStorage.setItem('oksana-touch', '1'); } catch (e) { } }
 }
-const inHelpBtn = p => p.x > VW - 44 && p.y < 34;
+/* Кнопка «?»: на заставке — крупная, справа под блоком бонусов; в игре — квадрат справа под верхней панелью */
+function helpBtnRect() { return S.mode === 'title' ? { x: 564, y: 246, w: 36, h: 36 } : { x: VW - 40, y: 22, w: 32, h: 32 }; }
+const inHelpBtn = p => { const b = helpBtnRect(); return p.x >= b.x - 8 && p.x <= b.x + b.w + 8 && p.y >= b.y - 8 && p.y <= b.y + b.h + 8; };
 
 function touchDown(id, p) {
   if (S.intro > 0) { if (S.intro < 7.3) S.intro = 0; return; }
@@ -106,8 +108,10 @@ function drawZones() {
   }
 }
 function drawHelpButton() {
-  const c = ctx; c.globalAlpha = 0.95; R(c, VW - 30, 1, 28, 16, '#1b0f33'); R(c, VW - 29, 2, 26, 14, '#ff3d7f'); c.globalAlpha = 1;
-  T('?', VW - 16, 5, '#ffffff', 8, 'center');
+  const c = ctx, b = helpBtnRect();
+  R(c, b.x + 2, b.y + 2, b.w, b.h, '#1b0f33');
+  R(c, b.x, b.y, b.w, b.h, '#ffffff'); R(c, b.x + 2, b.y + 2, b.w - 4, b.h - 4, '#ff3d7f');
+  T('?', b.x + b.w / 2, b.y + (b.h - 16) / 2 + 1, '#ffffff', 16, 'center');
 }
 function drawIntro() {
   const c = ctx, t = S.tt;
@@ -130,7 +134,7 @@ function drawIntro() {
   if (ph > 0.88) { c.globalAlpha = (ph - 0.88) / 0.12 * 0.8; c.fillStyle = '#ffffff'; c.fillRect(px - 26, py - 18, 52, 36); c.globalAlpha = 1; }
   textLines(['ВЕДИ — РАМКА ЗА ПАЛЬЦЕМ', 'ДЕРЖИ — НАВОДИТСЯ ФОКУС', 'ОТПУСТИ — СНИМОК'], 372, 204);
   if (Math.floor(t * 2) % 2 === 0) T('КАСАНИЕ — НАЧАТЬ СМЕНУ', VW / 2, 300, '#8aff7a', 8, 'center');
-  T('КНОПКА ? СВЕРХУ СПРАВА — ПРАВИЛА И ПАУЗА', VW / 2, 320, '#c9b6ff', 8, 'center');
+  T('КНОПКА ? СПРАВА — ПРАВИЛА И ПАУЗА', VW / 2, 320, '#c9b6ff', 8, 'center');
 }
 function drawTouch() {
   if (!S.touch) return;
